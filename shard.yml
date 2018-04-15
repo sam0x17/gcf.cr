@@ -1,0 +1,13 @@
+name: gcf
+version: 0.1.0
+
+authors:
+  - Sam Johnson <sam@durosoft.com>
+
+targets:
+  gcf:
+    main: src/gcf.cr
+
+crystal: 0.24.2
+
+license: MIT
