@@ -1,0 +1,15 @@
+{
+  "name": "compile-crystal",
+  "version": "1.0.0",
+  "description": "compiles and bootstraps crystal code to run in a google cloud function",
+  "main": "compile.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Sam Johnson",
+  "license": "MIT",
+  "dependencies": {
+    "fs-extra": "^5.0.0",
+    "tmp": "0.0.33"
+  }
+}
