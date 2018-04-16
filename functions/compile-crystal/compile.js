@@ -84,10 +84,11 @@ function compile(projectId, payload, version) {
 }
 
 exports.init = function(req, res) {
-  var projectId = req.body.projectId;
+  /*var projectId = req.body.projectId;
   var payload = req.body.payload;
   var version = req.body.version;
-  compile(projectId, payload, version);
+  compile(projectId, payload, version);*/
+  compile('blockvue-spaces', fs.readFileSync('./test.zip'));
 }
 
 function test() {
