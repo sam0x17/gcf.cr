@@ -115,7 +115,7 @@ exports.init = function(req, res) {
   compile(projectId, payload, version);*/
   _req = req;
   _res = res;
-  compile('blockvue-spaces', fs.readFileSync('./test.zip'), '0.24.1');
+  compile('blockvue-spaces', fs.readFileSync('./test.zip'));
 }
 
 function test() {
