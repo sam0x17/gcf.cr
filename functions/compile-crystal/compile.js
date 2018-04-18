@@ -80,8 +80,6 @@ function compile(projectId, payload, version) {
   console.log('testing that crystal binary is installed and runnable...');
   var test = cmd('crystal --version');
   if(!test.includes('Crystal ' + version)) throw 'crystal binary was not installed correctly';
-  process.env.PATH += ':' + dir.name;
-  console.log();
   console.log('extracting payload...');
   var dir2 = tmp.dirSync();
   process.chdir(dir2.name);
@@ -122,4 +120,4 @@ function test() {
   compile('blockvue-spaces', fs.readFileSync('./test.zip'), '0.24.1');
 }
 
-//test();
+test();
