@@ -33,8 +33,30 @@ function getCrystalDownloadLink(version) {
   return 'https://github.com'+result;
 }
 
+function addTo(path, variable) {
+  process.env[variable] = path + ':' + silentCmd('echo $' + variable).trim();
+  console.log('added ' + path + ' to ' + variable);
+}
+
+var _req, _res;
+
 function compile(projectId, payload, version) {
   console.log('preparing to compile...');
+  var pwd = silentCmd('pwd').trim();
+  console.log();
+  console.log('injecting pcre into environment...')
+  addTo(pwd + '/pcre/bin', 'PATH');
+  addTo(pwd + '/pcre/lib', 'LD_LIBRARY_PATH');
+  addTo(pwd + '/pcre/lib', 'LIBRARY_PATH');
+  addTo(pwd + '/pcre/include', 'C_INCLUDE_PATH');
+  addTo(pwd + '/pcre/include', 'CPP_INCLUDE_PATH');
+  console.log();
+  console.log('injecting libevent into environment...')
+  addTo(pwd + '/libevent/bin', 'PATH');
+  addTo(pwd + '/libevent/lib', 'LD_LIBRARY_PATH');
+  addTo(pwd + '/libevent/lib', 'LIBRARY_PATH');
+  addTo(pwd + '/libevent/include', 'C_INCLUDE_PATH');
+  addTo(pwd + '/libevent/include', 'CPP_INCLUDE_PATH');
   console.log();
   var dir = tmp.dirSync();
   process.chdir(dir.name);
@@ -52,10 +74,11 @@ function compile(projectId, payload, version) {
   console.log('extracting "' + filename + '"...');
   cmd('tar -xzf *.tar.gz');
   console.log();
+  console.log('injecting crystal binaries into environment...')
+  addTo(dir.name + '/crystal-'+version+'/bin', 'PATH');
+  console.log();
   console.log('testing that crystal binary is installed and runnable...');
-  var crystalBinary = dir.name + '/crystal-'+version+'/bin/crystal';
-  var shardsBinary = dir.name + '/crystal-'+version+'/bin/shards';
-  var test = cmd(crystalBinary + ' --version');
+  var test = cmd('crystal --version');
   if(!test.includes('Crystal ' + version)) throw 'crystal binary was not installed correctly';
   process.env.PATH += ':' + dir.name;
   console.log();
@@ -63,36 +86,40 @@ function compile(projectId, payload, version) {
   var dir2 = tmp.dirSync();
   process.chdir(dir2.name);
   fs.writeFileSync('./payload.zip', payload);
-  fs.createReadStream('./payload.zip').pipe(unzipper.Extract({ path: '.' })).on('finish', function() {
+  fs.createReadStream('./payload.zip').pipe(unzipper.Extract({ path: dir2.name })).on('finish', function() {
+    process.chdir(dir2.name);
     fs.removeSync('./payload.zip');
     var executable_name = fs.readdirSync('.')[0];
     process.chdir(executable_name);
     console.log('finished extracting payload');
-    cmd('ls -la');
     console.log('installing shards...');
-    cmd(shardsBinary + ' install --release');
+    cmd('shards install --release');
     console.log();
     console.log('compiling with crystal ' + version + '...');
-    cmd(crystalBinary + ' build ./src/*.cr -o ' + executable_name + ' --release');
+    cmd('crystal  build ./src/*.cr -o ' + executable_name + ' --release');
     console.log();
     cmd('./'+executable_name);
     setTimeout(function() {
       try { fs.removeSync(dir2.name); } catch(e) {}
       try { fs.removeSync(dir.name); } catch(e) {}
+      if(_res) _res.status(200).send('OK');
     }, 10);
   });
 }
 
 exports.init = function(req, res) {
+  console.log('loaded init function');
   /*var projectId = req.body.projectId;
   var payload = req.body.payload;
   var version = req.body.version;
   compile(projectId, payload, version);*/
-  compile('blockvue-spaces', fs.readFileSync('./test.zip'));
+  _req = req;
+  _res = res;
+  compile('blockvue-spaces', fs.readFileSync('./test.zip'), '0.24.1');
 }
 
 function test() {
-  compile('blockvue-spaces', fs.readFileSync('./test.zip'));
+  compile('blockvue-spaces', fs.readFileSync('./test.zip'), '0.24.1');
 }
 
-test();
+//test();
