@@ -1,6 +1,15 @@
-# gcf
+# gcf.cr
 
-TODO: Write a description here
+gcf.cr provides managed execution of crystal language code within Google Cloud Functions.
+Functions are deployed automatically in a two stage process:
+
+1. a "compile-crystal" function is automatically created in your current gcloud project.
+   gcf.cr will upload your crystal code to this function and compile it so that all
+   platform-specific optimizations are in place.
+
+2. the resulting compiled binary is deployed as its own cloud function with an automatically
+   generated Node.js loader/bootstrapper. An API is also provided for sending the final
+   response back to Node.js from within crystal.
 
 ## Installation
 
