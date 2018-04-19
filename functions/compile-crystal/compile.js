@@ -45,18 +45,20 @@ function compile(projectId, payload, version) {
   var pwd = silentCmd('pwd').trim();
   console.log();
   console.log('injecting pcre into environment...')
-  addTo(pwd + '/pcre/bin', 'PATH');
-  addTo(pwd + '/pcre/lib', 'LD_LIBRARY_PATH');
-  addTo(pwd + '/pcre/lib', 'LIBRARY_PATH');
-  addTo(pwd + '/pcre/include', 'C_INCLUDE_PATH');
-  addTo(pwd + '/pcre/include', 'CPP_INCLUDE_PATH');
+  cmd('tar -xzf ./pcre.tar.gz -C /tmp');
+  addTo('/tmp/pcre/bin', 'PATH');
+  addTo('/tmp/pcre/lib', 'LD_LIBRARY_PATH');
+  addTo('/tmp/pcre/lib', 'LIBRARY_PATH');
+  addTo('/tmp/pcre/include', 'C_INCLUDE_PATH');
+  addTo('/tmp/pcre/include', 'CPP_INCLUDE_PATH');
   console.log();
   console.log('injecting libevent into environment...')
-  addTo(pwd + '/libevent/bin', 'PATH');
-  addTo(pwd + '/libevent/lib', 'LD_LIBRARY_PATH');
-  addTo(pwd + '/libevent/lib', 'LIBRARY_PATH');
-  addTo(pwd + '/libevent/include', 'C_INCLUDE_PATH');
-  addTo(pwd + '/libevent/include', 'CPP_INCLUDE_PATH');
+  cmd('tar -xzf ./libevent.tar.gz -C /tmp');
+  addTo('/tmp/libevent/bin', 'PATH');
+  addTo('/tmp/libevent/lib', 'LD_LIBRARY_PATH');
+  addTo('/tmp/libevent/lib', 'LIBRARY_PATH');
+  addTo('/tmp/libevent/include', 'C_INCLUDE_PATH');
+  addTo('/tmp/libevent/include', 'CPP_INCLUDE_PATH');
   console.log();
   var dir = tmp.dirSync();
   process.chdir(dir.name);
@@ -98,8 +100,12 @@ function compile(projectId, payload, version) {
     console.log();
     cmd('./'+executable_name);
     setTimeout(function() {
+      console.log('cleaning up...');
       try { fs.removeSync(dir2.name); } catch(e) {}
       try { fs.removeSync(dir.name); } catch(e) {}
+      try { fs.removeSync('/tmp/pcre'); } catch(e) {}
+      try { fs.removeSync('/tmp/libevent'); } catch(e) {}
+      console.log('done');
       if(_res) _res.status(200).send('OK');
     }, 10);
   });
@@ -120,4 +126,4 @@ function test() {
   compile('blockvue-spaces', fs.readFileSync('./test.zip'), '0.24.1');
 }
 
-test();
+//test();
