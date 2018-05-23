@@ -22,3 +22,8 @@ OptionParser.parse! do |parser|
   parser.on("-n", "--name", "cloud function name, defaults to name of directory or repo") { |v| function_name = v }
   parser.on("-v", "--version", "prints the version") { print_version }
 end
+
+require_app! "git"
+require_app! "zip"
+require_app! "unzip"
+require_app! "gcloud"
