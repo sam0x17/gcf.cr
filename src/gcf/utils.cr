@@ -10,3 +10,7 @@ end
 def require_app!(bin)
   raise "#{bin} must be installed to use #{APPNAME}" unless app_installed?(bin)
 end
+
+def gcloud_project_id
+  `gcloud config get-value project`
+end
