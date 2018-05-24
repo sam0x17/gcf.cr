@@ -45,3 +45,5 @@ unless run_deploy
   puts ""
   exit 0
 end
+
+project_id = gcloud_project_id if project_id == ""

@@ -12,9 +12,12 @@ def require_app!(bin)
 end
 
 def gcloud_project_id
-  `gcloud config get-value project`
+  project_id = `gcloud config get-value project`.strip
+  puts " => read project ID '#{project_id}' from gcloud"
+  project_id
 end
 
 def zip_directory(dir_path, zip_file_path)
   `zip -r "#{zip_file_path}" "#{dir_path}"`
+  puts " => zipped #{dir_path} for deployment"
 end
