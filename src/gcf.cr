@@ -3,6 +3,7 @@ APPBIN = "gcf"
 
 require "./gcf/*"
 require "option_parser"
+require "file_utils"
 
 def print_version
   puts ""
@@ -14,6 +15,8 @@ end
 project_id = ""
 source_path = "."
 function_name = ""
+http_trigger = ""
+region = "us-central1"
 run_deploy = false
 
 options_parser = nil
@@ -23,9 +26,10 @@ OptionParser.parse! do |parser|
   parser.banner = "usage: #{APPBIN} [arguments]"
   parser.on("-h", "--help", "show this help") { puts ""; puts parser; puts "" }
   parser.on("-d", "--deploy", "required to indicate that you intend to deploy") { run_deploy = true }
-  parser.on("-p", "--project", "sets the Google project ID, defaults to current gcloud setting") { |v| project_id = v }
-  parser.on("-s", "--source", "path or git link to source code to be deployed, defaults to '.'") { |v| source_path = v }
-  parser.on("-n", "--name", "cloud function name, defaults to name of directory or repo") { |v| function_name = v }
+  parser.on("-p PROJECT", "--project PROJECT", "Google project ID, defaults to current gcloud setting") { |v| project_id = v }
+  parser.on("-s PATH", "--source PATH", "path or git link to source code to be deployed, defaults to '.'") { |v| source_path = v }
+  parser.on("-n NAME", "--name NAME", "cloud function name, defaults to name of directory or repo") { |v| function_name = v }
+  parser.on("-r REGION", "--region REGION", "region for cloud function deployment, only us-central1 is valid") { |v| region = v }
   parser.on("-v", "--version", "prints the version") { print_version }
   options_parser = parser
 end
@@ -46,4 +50,29 @@ unless run_deploy
   exit 0
 end
 
+print_version
+puts "starting deployment..."
+
+# check for valid region
+if region != "us-central1"
+  puts "error: the only valid cloud function region at the moment is \"us-central1\". You specified \"#{region}\""
+  exit 1
+end
+
+# get project_id if not already set
 project_id = gcloud_project_id if project_id == ""
+
+# massage source_path
+raise "source directory could not be found" unless File.exists?(source_path)
+FileUtils.cd source_path
+source_path = FileUtils.pwd
+source_directory_name = File.basename(source_path)
+puts " => source path set to \"#{source_path}\""
+
+# massage function_name
+function_name = source_directory_name if function_name == ""
+puts " => function_name set to \"#{function_name}\""
+
+# massage http_trigger
+http_trigger = "https://#{region}-#{project_id}.cloudfunctions.net/#{function_name}"
+puts " => http_trigger set to \"#{http_trigger}\""

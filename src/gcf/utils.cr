@@ -13,7 +13,7 @@ end
 
 def gcloud_project_id
   project_id = `gcloud config get-value project`.strip
-  puts " => read project ID '#{project_id}' from gcloud"
+  puts " => obtained project ID \"#{project_id}\" from gcloud"
   project_id
 end
 
