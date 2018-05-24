@@ -14,3 +14,7 @@ end
 def gcloud_project_id
   `gcloud config get-value project`
 end
+
+def zip_directory(dir_path, zip_file_path)
+  `zip -r "#{zip_file_path}" "#{dir_path}"`
+end
