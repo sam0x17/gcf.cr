@@ -21,3 +21,12 @@ def zip_directory(dir_path, zip_file_path)
   `zip -r "#{zip_file_path}" "#{dir_path}"`
   puts " => zipped #{dir_path} for deployment"
 end
+
+def temp_dir(prefix)
+  dir = "/tmp/#{prefix}-#{Time.now.epoch}"
+  FileUtils.mkdir_p dir
+  FileUtils.rm_rf dir # delete if existed before
+  FileUtils.mkdir_p dir
+  at_exit { FileUtils.rm_rf dir }
+  dir
+end

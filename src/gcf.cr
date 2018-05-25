@@ -117,3 +117,7 @@ unless POSSIBLE_MEMORY_CONFIGS.includes?(function_memory)
   raise "#{function_memory} is not a valid memory configuration. Must be one of #{POSSIBLE_MEMORY_CONFIGS}"
 end
 puts " => function memory set to #{function_memory}"
+
+# prepare staging directory
+staging_dir = temp_dir("crystal-gcf-deploy-")
+puts " => staging directory set to \"#{staging_dir}\""
