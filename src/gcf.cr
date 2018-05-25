@@ -1,6 +1,7 @@
 APPNAME = "gcf.cr"
 APPBIN = "gcf"
 POSSIBLE_MEMORY_CONFIGS = ["128 MB", "256 MB", "512 MB", "1 GB", "2 GB"]
+POSSIBLE_TRIGGER_MODES = ["http", "topic", "bucket-create", "bucket-delete", "bucket-archive", "bucket-metadata-update"]
 
 require "./gcf/*"
 require "option_parser"
@@ -19,6 +20,9 @@ function_name = ""
 http_trigger = ""
 region = "us-central1"
 function_memory = "128 MB"
+trigger_mode = "http"
+bucket = ""
+topic = ""
 
 run_deploy = false
 
@@ -33,7 +37,12 @@ OptionParser.parse! do |parser|
   parser.on("-s PATH", "--source PATH", "path or git link to source code to be deployed, defaults to '.'") { |v| source_path = v }
   parser.on("-n NAME", "--name NAME", "cloud function name, defaults to name of directory or repo") { |v| function_name = v }
   parser.on("-r REGION", "--region REGION", "region for cloud function deployment, only us-central1 is valid") { |v| region = v }
-  parser.on("-m MEMORY", "--memory MEMORY", "ram for cloud function, valid: 128 MB | 256 MB | 512 MB | 1 GB | 2 GB") { |v| function_memory = v }
+  parser.on("-m MEMORY", "--memory MEMORY", "ram/memory allocated for cloud function, valid: 128 MB | 256 MB | 512 MB | 1 GB | 2 GB") { |v| function_memory = v }
+  parser.on("-t TRIGGER", "--trigger TRIGGER", "trigger mode for the cloud function, valid: http, topic, bucket-create, bucket-delete, bucket-archive, bucket-metadata-update") do |v|
+    trigger_mode = v
+  end
+  parser.on("-T TOPIC", "--topic TOPIC", "trigger topic name when deploying a topic-triggered cloud function") { |v| topic = v }
+  parser.on("-b BUCKET", "--bucket BUCKET", "trigger bucket name when deploying using a bucket-triggered cloud function") { |v| bucket = v }
   parser.on("-v", "--version", "prints the version") { print_version }
   options_parser = parser
 end
@@ -63,26 +72,48 @@ if region != "us-central1"
   exit 1
 end
 
-# get project_id if not already set
+# get project_id from gcloud if not already set
 project_id = gcloud_project_id if project_id == ""
 
-# massage source_path
+# parse source_path
 raise "source directory could not be found" unless File.exists?(source_path)
 FileUtils.cd source_path
 source_path = FileUtils.pwd
 source_directory_name = File.basename(source_path)
 puts " => source path set to \"#{source_path}\""
 
-# massage function_name
+# parse function_name
 function_name = source_directory_name if function_name == ""
 puts " => function_name set to \"#{function_name}\""
 
-# massage http_trigger
-http_trigger = "https://#{region}-#{project_id}.cloudfunctions.net/#{function_name}"
-puts " => http_trigger set to \"#{http_trigger}\""
+# parse trigger mode
+orig_trigger_mode = trigger_mode
+case trigger_mode
+when "http"
+  trigger_mode = :http
+  http_trigger = "https://#{region}-#{project_id}.cloudfunctions.net/#{function_name}"
+  puts " => trigger mode set to http on \"#{http_trigger}\""
+when "topic"
+  trigger_mode = :topic
+  raise "must define a topic when using a topic-based trigger mode" if topic == ""
+  puts " => trigger mode set to topic on topic \"#{topic}\""
+when "bucket-create"; trigger_mode = :bucket_create
+when "bucket-delete"; trigger_mode = :bucket_delete
+when "bucket-archive"; trigger_mode = :bucket_archive
+when "bucket-metadata-update"; trigger_mode = :bucket_metadata_update
+else
+  raise "trigger mode must be one of #{POSSIBLE_TRIGGER_MODES}"
+end
 
-# massage memory
+# parse bucket
+case trigger_mode
+when :bucket_create, :bucket_delete, :bucket_archive, :bucket_metadata_update
+  raise "must define a bucket name when using a bucket-based trigger mode" if bucket == ""
+  puts " => trigger mode set to #{orig_trigger_mode} on bucket \"#{bucket}\""
+end
+
+# parse memory
 unless POSSIBLE_MEMORY_CONFIGS.includes?(function_memory)
   raise "#{function_memory} is not a valid memory configuration. Must be one of #{POSSIBLE_MEMORY_CONFIGS}"
 end
-puts " => function_memory set to #{function_memory}"
+puts " => function memory set to #{function_memory}"
