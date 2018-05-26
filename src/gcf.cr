@@ -2,6 +2,7 @@ APPNAME = "gcf.cr"
 APPBIN = "gcf"
 POSSIBLE_MEMORY_CONFIGS = ["128 MB", "256 MB", "512 MB", "1 GB", "2 GB"]
 POSSIBLE_TRIGGER_MODES = ["http", "topic", "bucket-create", "bucket-delete", "bucket-archive", "bucket-metadata-update"]
+TEMPLATE_DIR = FileUtils.pwd + "/src/compile-crystal"
 
 require "./gcf/*"
 require "option_parser"
@@ -73,7 +74,11 @@ if region != "us-central1"
 end
 
 # get project_id from gcloud if not already set
-project_id = gcloud_project_id if project_id == ""
+if project_id == ""
+  project_id = gcloud_project_id
+else
+  puts " => set project ID to \"#{project_id}\""
+end
 
 # parse source_path
 raise "source directory could not be found" unless File.exists?(source_path)
@@ -119,5 +124,10 @@ end
 puts " => function memory set to #{function_memory}"
 
 # prepare staging directory
-staging_dir = temp_dir("crystal-gcf-deploy-")
+staging_dir = temp_dir("crystal-gcf-deploy-", false)
+FileUtils.cp_r TEMPLATE_DIR, staging_dir
+FileUtils.rm_rf "#{staging_dir}/node_modules"
 puts " => staging directory set to \"#{staging_dir}\""
+
+# zip up deployment target
+zip_dir(source_path, "#{staging_dir}/payload.zip")

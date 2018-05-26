@@ -1,8 +1,3 @@
-GCLOUD_INSTALLED = `which gcloud` != ""
-GIT_INSTALLED = `which git` != ""
-UNZIP_INSTALLED = `which unzip` != ""
-ZIP_INSTALLED = `which zip` != ""
-
 def app_installed?(bin)
   `which #{bin}` != ""
 end
@@ -17,16 +12,16 @@ def gcloud_project_id
   project_id
 end
 
-def zip_directory(dir_path, zip_file_path)
+def zip_dir(dir_path, zip_file_path)
   `zip -r "#{zip_file_path}" "#{dir_path}"`
   puts " => zipped #{dir_path} for deployment"
 end
 
-def temp_dir(prefix)
+def temp_dir(prefix, create = true)
   dir = "/tmp/#{prefix}-#{Time.now.epoch}"
   FileUtils.mkdir_p dir
   FileUtils.rm_rf dir # delete if existed before
-  FileUtils.mkdir_p dir
+  FileUtils.mkdir_p(dir) if create
   at_exit { FileUtils.rm_rf dir }
   dir
 end
