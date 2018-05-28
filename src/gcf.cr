@@ -22,6 +22,7 @@ http_trigger = ""
 region = "us-central1"
 function_memory = "128 MB"
 trigger_mode = "http"
+crystal_version = "0.24.2"
 bucket = ""
 topic = ""
 
@@ -39,6 +40,7 @@ OptionParser.parse! do |parser|
   parser.on("-n NAME", "--name NAME", "cloud function name, defaults to name of directory or repo") { |v| function_name = v }
   parser.on("-r REGION", "--region REGION", "region for cloud function deployment, only us-central1 is valid") { |v| region = v }
   parser.on("-m MEMORY", "--memory MEMORY", "ram/memory allocated for cloud function, valid: 128 MB | 256 MB | 512 MB | 1 GB | 2 GB") { |v| function_memory = v }
+  parser.on("-c VERSION", "--crystal VERSION", "version of crystal to use for this deployment e.g. \"0.24.2\"") { |v| crystal_version = v }
   parser.on("-t TRIGGER", "--trigger TRIGGER", "trigger mode for the cloud function, valid: http, topic, bucket-create, bucket-delete, bucket-archive, bucket-metadata-update") do |v|
     trigger_mode = v
   end
@@ -91,6 +93,18 @@ puts " => source path set to \"#{source_path}\""
 function_name = source_directory_name if function_name == ""
 puts " => function_name set to \"#{function_name}\""
 
+# parse memory
+unless POSSIBLE_MEMORY_CONFIGS.includes?(function_memory)
+  raise "#{function_memory} is not a valid memory configuration. Must be one of #{POSSIBLE_MEMORY_CONFIGS}"
+end
+puts " => function memory set to #{function_memory}"
+
+# parse version
+unless valid_version? crystal_version
+  raise "#{crystal_version} is not a valid crystal version, e.g. 0.24.2"
+end
+puts " => crystal version set to #{crystal_version}"
+
 # parse trigger mode
 orig_trigger_mode = trigger_mode
 case trigger_mode
@@ -116,12 +130,6 @@ when :bucket_create, :bucket_delete, :bucket_archive, :bucket_metadata_update
   raise "must define a bucket name when using a bucket-based trigger mode" if bucket == ""
   puts " => trigger mode set to #{orig_trigger_mode} on bucket \"#{bucket}\""
 end
-
-# parse memory
-unless POSSIBLE_MEMORY_CONFIGS.includes?(function_memory)
-  raise "#{function_memory} is not a valid memory configuration. Must be one of #{POSSIBLE_MEMORY_CONFIGS}"
-end
-puts " => function memory set to #{function_memory}"
 
 # prepare staging directory
 staging_dir = temp_dir("crystal-gcf-deploy-", false)

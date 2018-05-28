@@ -25,3 +25,7 @@ def temp_dir(prefix, create = true)
   at_exit { FileUtils.rm_rf dir }
   dir
 end
+
+def valid_version?(version)
+  !!(/^v?[0-9]+.[0-9]+.[0-9]+$/ =~ version)
+end
