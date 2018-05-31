@@ -139,3 +139,14 @@ puts " => staging directory set to \"#{staging_dir}\""
 
 # zip up deployment target
 zip_dir(source_path, "#{staging_dir}/payload.zip")
+puts ""
+
+# deploy compilation function
+puts "deploying staging/compilation function..."
+compile_deploy_resp = `gcloud beta functions deploy compile-crystal --source=. --entry-point=init --memory=2048MB --timeout=540 --trigger-http`
+unless compile_deploy_resp.includes? "status: ACTIVE"
+  puts ""
+  puts "an error occurred deploying the intermediate compilation function"
+  exit 1
+end
+puts "success."

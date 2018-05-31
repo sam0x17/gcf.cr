@@ -88,7 +88,6 @@ function compile(projectId, payload, version) {
   console.log('extracting payload...');
   var dir2 = tmp.dirSync();
   process.chdir(dir2.name);
-  fs.writeFileSync('./payload.zip', payload);
   fs.createReadStream('./payload.zip').pipe(unzipper.Extract({ path: dir2.name })).on('finish', function() {
     process.chdir(dir2.name);
     fs.removeSync('./payload.zip');
@@ -101,7 +100,7 @@ function compile(projectId, payload, version) {
     console.log('compiling with crystal ' + version + '...');
     cmd('crystal  build ./src/*.cr -o ' + executable_name + ' --release');
     console.log();
-    cmd('./'+executable_name);
+    res.status(200).sendFile('./'+executable_name);
     setTimeout(function() {
       console.log('cleaning up...');
       try { fs.removeSync(dir2.name); } catch(e) {}
@@ -109,18 +108,16 @@ function compile(projectId, payload, version) {
       try { fs.removeSync('/tmp/pcre'); } catch(e) {}
       try { fs.removeSync('/tmp/libevent'); } catch(e) {}
       console.log('done');
-      if(res) res.status(200).send('OK');
     }, 10);
   });
 }
 
-
 exports.init = function(_req, _res) {
   req = _req;
   res = _res;
-  compile(req.body.project_id, fs.readFileSync('./payload.zip'), req.body.crystal_version);
+  compile(req.body.project_id, req.body.crystal_version);
 }
 
 function test() {
-  compile('test-project', fs.readFileSync('./test.zip'), '0.24.1');
+  compile('test-project', '0.24.1');
 }
