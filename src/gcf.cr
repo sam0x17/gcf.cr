@@ -2,7 +2,7 @@ APPNAME = "gcf.cr"
 APPBIN = "gcf"
 POSSIBLE_MEMORY_CONFIGS = ["128 MB", "256 MB", "512 MB", "1 GB", "2 GB"]
 POSSIBLE_TRIGGER_MODES = ["http", "topic", "bucket-create", "bucket-delete", "bucket-archive", "bucket-metadata-update"]
-TEMPLATE_DIR = FileUtils.pwd + "/src/compile-crystal"
+PWD = `pwd`.strip
 
 require "./gcf/*"
 require "option_parser"
@@ -132,8 +132,15 @@ when :bucket_create, :bucket_delete, :bucket_archive, :bucket_metadata_update
 end
 
 # prepare staging directory
-staging_dir = temp_dir("crystal-gcf-deploy-", false)
-FileUtils.cp_r TEMPLATE_DIR, staging_dir
+staging_dir = temp_dir("crystal-gcf-deploy", false)
+unzip_dir = temp_dir("crystal-unzip-dir", true)
+zip_contents =  FileStorage.get("compile-crystal.zip").gets_to_end
+File.write("#{unzip_dir}/compile-crystal.zip", zip_contents)
+FileUtils.cd unzip_dir
+`unzip #{unzip_dir}/compile-crystal.zip`
+FileUtils.cp_r "#{unzip_dir}/compile-crystal/", staging_dir
+FileUtils.cd staging_dir
+`ls`
 FileUtils.rm_rf "#{staging_dir}/node_modules"
 puts " => staging directory set to \"#{staging_dir}\""
 

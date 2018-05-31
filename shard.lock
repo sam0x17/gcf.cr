@@ -1,0 +1,6 @@
+version: 1.0
+shards:
+  baked_file_system:
+    github: schovi/baked_file_system
+    version: 0.9.6
+

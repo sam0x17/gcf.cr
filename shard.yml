@@ -8,6 +8,10 @@ targets:
   gcf:
     main: src/gcf.cr
 
+dependencies:
+  baked_file_system:
+    github: schovi/baked_file_system
+
 crystal: 0.24.2
 
 license: MIT
