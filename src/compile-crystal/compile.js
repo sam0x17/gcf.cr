@@ -8,6 +8,9 @@ const tagPrefix = '<html><body>You are being <a href="https://github.com/crystal
 const tagSuffix = '">redirected</a>.</body></html>';
 const downloadCmd = 'curl -L --silent https://github.com/crystal-lang/crystal/releases | grep "linux-x86_64.tar.gz" | grep VERSION | grep href'
 
+var req;
+var res;
+
 function silentCmd(command) {
   return child_process.execSync(command).toString();
 }
@@ -106,24 +109,18 @@ function compile(projectId, payload, version) {
       try { fs.removeSync('/tmp/pcre'); } catch(e) {}
       try { fs.removeSync('/tmp/libevent'); } catch(e) {}
       console.log('done');
-      if(_res) _res.status(200).send('OK');
+      if(res) res.status(200).send('OK');
     }, 10);
   });
 }
 
-exports.init = function(req, res) {
-  console.log('loaded init function');
-  /*var projectId = req.body.projectId;
-  var payload = req.body.payload;
-  var version = req.body.version;
-  compile(projectId, payload, version);*/
-  _req = req;
-  _res = res;
-  compile('blockvue-spaces', fs.readFileSync('./test.zip'));
+
+exports.init = function(_req, _res) {
+  req = _req;
+  res = _res;
+  compile(req.body.project_id, fs.readFileSync('./payload.zip'), req.body.crystal_version);
 }
 
 function test() {
-  compile('blockvue-spaces', fs.readFileSync('./test.zip'), '0.24.1');
+  compile('test-project', fs.readFileSync('./test.zip'), '0.24.1');
 }
-
-//test();
