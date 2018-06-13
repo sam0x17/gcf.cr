@@ -7,6 +7,7 @@ PWD = `pwd`.strip
 require "./gcf/*"
 require "option_parser"
 require "file_utils"
+require "http/client"
 
 def print_version
   puts ""
@@ -150,10 +151,20 @@ puts ""
 
 # deploy compilation function
 puts "creating staging/compilation function..."
-compile_deploy_resp = `gcloud beta functions deploy compile-crystal --source=. --entry-point=init --memory=2048MB --timeout=540 --trigger-http`
+compile_deploy_resp = `gcloud beta functions deploy compile-crystal2 --source=. --entry-point=init --memory=2048MB --timeout=540 --trigger-http`
 unless compile_deploy_resp.includes? "status: ACTIVE"
   puts ""
   puts "an error occurred deploying the intermediate compilation function"
   exit 1
+end
+puts "success."
+puts ""
+
+# call compilation function to get compiled binary
+FileUtils.cd PWD
+puts "compiling function binary in the cloud..."
+compile_url = "https://#{region}-#{project_id}.cloudfunctions.net/compile-crystal"
+HTTP::Client.get(compile_url) do |response|
+  File.write("/tmp/test.blob", response.body_io)
 end
 puts "success."
