@@ -100,9 +100,9 @@ function compile(projectId, payload, version) {
     console.log('compiling with crystal ' + version + '...');
     cmd('crystal  build ./src/*.cr -o ' + executable_name + ' --release');
     console.log();
-    res.status(200).sendFile('./'+executable_name);
     setTimeout(function() {
       console.log('cleaning up...');
+      res.status(200).sendFile('./'+executable_name);
       try { fs.removeSync(dir2.name); } catch(e) {}
       try { fs.removeSync(dir.name); } catch(e) {}
       try { fs.removeSync('/tmp/pcre'); } catch(e) {}
