@@ -12,6 +12,16 @@ def gcloud_project_id
   project_id
 end
 
+def random_alpha_numeric
+  "abcdefghijklmnopqrstuvwxyz0123456789".chars.sample
+end
+
+def random_string(length)
+  st = ""
+  length.times { st += random_alpha_numeric }
+  st
+end
+
 def zip_dir(dir_path, zip_file_path)
   `zip -r "#{zip_file_path}" "#{dir_path}"`
   puts " => zipped #{dir_path} for deployment"

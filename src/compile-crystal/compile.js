@@ -41,9 +41,17 @@ function addTo(path, variable) {
   console.log('added ' + path + ' to ' + variable);
 }
 
+function procMemUsage() {
+  cmd('free -h');
+  cmd('ps aux  | awk \'{print $6/1024 " MB\t\t" $11}\'  | sort -n');
+  cmd('ls -l /dev/zero');
+  cmd('head -c 1000000 /dev/zero | od -t x1');
+}
+
 var _req, _res;
 
 function compile(projectId, payload, version) {
+  procMemUsage();
   console.log('preparing to compile...');
   var pwd = silentCmd('pwd').trim();
   console.log();
@@ -62,6 +70,7 @@ function compile(projectId, payload, version) {
   addTo('/tmp/libevent/lib', 'LIBRARY_PATH');
   addTo('/tmp/libevent/include', 'C_INCLUDE_PATH');
   addTo('/tmp/libevent/include', 'CPP_INCLUDE_PATH');
+  procMemUsage();
   console.log();
   var dir = tmp.dirSync();
   process.chdir(dir.name);
@@ -79,16 +88,19 @@ function compile(projectId, payload, version) {
   console.log('extracting "' + filename + '"...');
   cmd('tar -xzf *.tar.gz');
   console.log();
+  procMemUsage();
   console.log('injecting crystal binaries into environment...')
   addTo(dir.name + '/crystal-'+version+'/bin', 'PATH');
   console.log();
   console.log('testing that crystal binary is installed and runnable...');
-  var test = cmd('crystal --version');
+  procMemUsage();
+  var test = cmd(pwd + '/strace crystal --version');
   if(!test.includes('Crystal ' + version)) throw 'crystal binary was not installed correctly';
+  procMemUsage();
   console.log('extracting payload...');
   var dir2 = tmp.dirSync();
   process.chdir(dir2.name);
-  fs.createReadStream('./payload.zip').pipe(unzipper.Extract({ path: dir2.name })).on('finish', function() {
+  fs.createReadStream(pwd + '/payload.zip').pipe(unzipper.Extract({ path: dir2.name })).on('finish', function() {
     process.chdir(dir2.name);
     fs.removeSync('./payload.zip');
     var executable_name = fs.readdirSync('.')[0];

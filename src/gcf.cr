@@ -145,13 +145,17 @@ FileUtils.cd staging_dir
 FileUtils.rm_rf "#{staging_dir}/node_modules"
 puts " => staging directory set to \"#{staging_dir}\""
 
+# generate compilation function name
+compile_name = "compile-crystal-#{random_string(6)}"
+puts " => set compilation function name to #{compile_name}"
+
 # zip up deployment target
 zip_dir(source_path, "#{staging_dir}/payload.zip")
 puts ""
 
 # deploy compilation function
 puts "creating staging/compilation function..."
-compile_deploy_resp = `gcloud beta functions deploy compile-crystal2 --source=. --entry-point=init --memory=2048MB --timeout=540 --trigger-http`
+compile_deploy_resp = `gcloud beta functions deploy #{compile_name} --source=. --entry-point=init --memory=2048MB --timeout=540 --trigger-http`
 unless compile_deploy_resp.includes? "status: ACTIVE"
   puts ""
   puts "an error occurred deploying the intermediate compilation function"
