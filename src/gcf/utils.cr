@@ -1,9 +1,21 @@
+def polite_raise!(message)
+  puts ""
+  puts "error: #{message}"
+  puts ""
+  exit 1
+end
+
 def app_installed?(bin)
   `which #{bin}` != ""
 end
 
 def require_app!(bin)
-  raise "#{bin} must be installed to use #{APPNAME}" unless app_installed?(bin)
+  return if app_installed? bin
+  polite_raise! "#{bin} must be installed to use #{APPNAME}"
+end
+
+def docker_available?
+  !`docker info`.includes? "denied"
 end
 
 def gcloud_project_id
@@ -22,11 +34,6 @@ def random_string(length)
   st
 end
 
-def zip_dir(dir_path, zip_file_path)
-  `zip -r "#{zip_file_path}" "#{dir_path}"`
-  puts " => zipped #{dir_path} for deployment"
-end
-
 def temp_dir(prefix, create = true)
   dir = "/tmp/#{prefix}-#{Time.now.epoch}"
   FileUtils.mkdir_p dir
@@ -38,4 +45,10 @@ end
 
 def valid_version?(version)
   !!(/^v?[0-9]+.[0-9]+.[0-9]+$/ =~ version)
+end
+
+module FileUtils
+  def self.rm_rf_if_exists(path)
+    FileUtils.rm_rf(path) if File.exists?(path)
+  end
 end

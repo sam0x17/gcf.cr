@@ -3,5 +3,3 @@
 /bin/
 /.shards/
 /gcf
-/bake/*
-!/bake/.keep

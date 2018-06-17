@@ -1,8 +1,9 @@
 APPNAME = "gcf.cr"
 APPBIN = "gcf"
-POSSIBLE_MEMORY_CONFIGS = ["128 MB", "256 MB", "512 MB", "1 GB", "2 GB"]
+POSSIBLE_MEMORY_CONFIGS = ["128MB", "256MB", "512MB", "1GB", "2GB"]
 POSSIBLE_TRIGGER_MODES = ["http", "topic", "bucket-create", "bucket-delete", "bucket-archive", "bucket-metadata-update"]
 PWD = `pwd`.strip
+CRYSTAL_STATIC_BUILD = "crystal build src/*.cr -o crystal_function --release --static --no-debug"
 
 require "./gcf/*"
 require "option_parser"
@@ -21,13 +22,13 @@ source_path = "."
 function_name = ""
 http_trigger = ""
 region = "us-central1"
-function_memory = "128 MB"
+function_memory = "128MB"
 trigger_mode = "http"
-crystal_version = "0.24.2"
 bucket = ""
 topic = ""
 
 run_deploy = false
+use_local_crystal = false
 
 options_parser = nil
 
@@ -36,12 +37,12 @@ OptionParser.parse! do |parser|
   parser.banner = "usage: #{APPBIN} [arguments]"
   parser.on("-h", "--help", "show this help") { puts ""; puts parser; puts "" }
   parser.on("-d", "--deploy", "required to indicate that you intend to deploy") { run_deploy = true }
+  parser.on("-l", "--local", "attempt to statically compile crystal function using local system crystal") { use_local_crystal = true }
   parser.on("-p PROJECT", "--project PROJECT", "Google project ID, defaults to current gcloud setting") { |v| project_id = v }
-  parser.on("-s PATH", "--source PATH", "path or git link to source code to be deployed, defaults to '.'") { |v| source_path = v }
+  parser.on("-s PATH", "--source PATH", "path to source code to be deployed, defaults to '.'") { |v| source_path = v }
   parser.on("-n NAME", "--name NAME", "cloud function name, defaults to name of directory or repo") { |v| function_name = v }
   parser.on("-r REGION", "--region REGION", "region for cloud function deployment, only us-central1 is valid") { |v| region = v }
-  parser.on("-m MEMORY", "--memory MEMORY", "ram/memory allocated for cloud function, valid: 128 MB | 256 MB | 512 MB | 1 GB | 2 GB") { |v| function_memory = v }
-  parser.on("-c VERSION", "--crystal VERSION", "version of crystal to use for this deployment e.g. \"0.24.2\"") { |v| crystal_version = v }
+  parser.on("-m MEMORY", "--memory MEMORY", "ram/memory allocated for cloud function, valid: 128MB | 256MB | 512MB | 1GB | 2GB") { |v| function_memory = v }
   parser.on("-t TRIGGER", "--trigger TRIGGER", "trigger mode for the cloud function, valid: http, topic, bucket-create, bucket-delete, bucket-archive, bucket-metadata-update") do |v|
     trigger_mode = v
   end
@@ -52,10 +53,16 @@ OptionParser.parse! do |parser|
 end
 
 # check prerequisites
-require_app! "git"
-require_app! "zip"
-require_app! "unzip"
 require_app! "gcloud"
+require_app! "docker"
+if !docker_available? && !use_local_crystal
+  puts "error: docker must be set up to work without sudo privileges unless using the --local option. Please see the following guide for more information:"
+  puts "https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user"
+  exit 1
+else
+  # crystal is required only if we aren't using docker to generate our crystal binary
+  require_app! "crystal"
+end
 
 # display usage info if no action to take
 unless run_deploy
@@ -96,15 +103,9 @@ puts " => function_name set to \"#{function_name}\""
 
 # parse memory
 unless POSSIBLE_MEMORY_CONFIGS.includes?(function_memory)
-  raise "#{function_memory} is not a valid memory configuration. Must be one of #{POSSIBLE_MEMORY_CONFIGS}"
+  polite_raise! "#{function_memory} is not a valid memory configuration. Must be one of #{POSSIBLE_MEMORY_CONFIGS}"
 end
 puts " => function memory set to #{function_memory}"
-
-# parse version
-unless valid_version? crystal_version
-  raise "#{crystal_version} is not a valid crystal version, e.g. 0.24.2"
-end
-puts " => crystal version set to #{crystal_version}"
 
 # parse trigger mode
 orig_trigger_mode = trigger_mode
@@ -115,60 +116,58 @@ when "http"
   puts " => trigger mode set to http on \"#{http_trigger}\""
 when "topic"
   trigger_mode = :topic
-  raise "must define a topic when using a topic-based trigger mode" if topic == ""
+  polite_raise! "must define a topic when using a topic-based trigger mode" if topic == ""
   puts " => trigger mode set to topic on topic \"#{topic}\""
 when "bucket-create"; trigger_mode = :bucket_create
 when "bucket-delete"; trigger_mode = :bucket_delete
 when "bucket-archive"; trigger_mode = :bucket_archive
 when "bucket-metadata-update"; trigger_mode = :bucket_metadata_update
 else
-  raise "trigger mode must be one of #{POSSIBLE_TRIGGER_MODES}"
+  polite_raise! "trigger mode must be one of #{POSSIBLE_TRIGGER_MODES}"
 end
 
 # parse bucket
 case trigger_mode
 when :bucket_create, :bucket_delete, :bucket_archive, :bucket_metadata_update
-  raise "must define a bucket name when using a bucket-based trigger mode" if bucket == ""
+  polite_raise! "must define a bucket name when using a bucket-based trigger mode" if bucket == ""
   puts " => trigger mode set to #{orig_trigger_mode} on bucket \"#{bucket}\""
+end
+
+unless trigger_mode == :http
+  polite_raise! "non http trigger modes are not yet supported"
 end
 
 # prepare staging directory
 staging_dir = temp_dir("crystal-gcf-deploy", false)
-unzip_dir = temp_dir("crystal-unzip-dir", true)
-zip_contents =  FileStorage.get("compile-crystal.zip").gets_to_end
-File.write("#{unzip_dir}/compile-crystal.zip", zip_contents)
-FileUtils.cd unzip_dir
-`unzip #{unzip_dir}/compile-crystal.zip`
-FileUtils.cp_r "#{unzip_dir}/compile-crystal/", staging_dir
+FileUtils.cp_r "#{source_path}/", staging_dir
+if File.exists? "#{staging_dir}/crystal.js"
+  polite_raise! "you cannot have a file named crystal.js in your source directory"
+end
+if File.exists? "#{staging_dir}/package.json"
+  polite_raise! "you cannot have a file named package.json in your source directory"
+end
+File.write("#{staging_dir}/package.json", GCF::DeployTemplate::PACKAGE_INFO)
+File.write("#{staging_dir}/crystal.js", GCF::DeployTemplate::CRYSTAL_JS)
+FileUtils.rm_rf_if_exists "#{staging_dir}/node_modules"
 FileUtils.cd staging_dir
-`ls`
-FileUtils.rm_rf "#{staging_dir}/node_modules"
 puts " => staging directory set to \"#{staging_dir}\""
-
-# generate compilation function name
-compile_name = "compile-crystal-#{random_string(6)}"
-puts " => set compilation function name to #{compile_name}"
-
-# zip up deployment target
-zip_dir(source_path, "#{staging_dir}/payload.zip")
 puts ""
 
-# deploy compilation function
-puts "creating staging/compilation function..."
-compile_deploy_resp = `gcloud beta functions deploy #{compile_name} --source=. --entry-point=init --memory=2048MB --timeout=540 --trigger-http`
-unless compile_deploy_resp.includes? "status: ACTIVE"
-  puts ""
-  puts "an error occurred deploying the intermediate compilation function"
-  exit 1
+# compile crystal function
+if use_local_crystal
+  puts "compiling static binary using local crystal installation: #{`crystal --version`.strip}..."
+  comp_result = `#{CRYSTAL_STATIC_BUILD}`
+else
+  puts "compiling static binary using the jrei/crystal-alpine docker image..."
+  comp_result = `docker run --rm -it -v $PWD:/app -w /app jrei/crystal-alpine #{CRYSTAL_STATIC_BUILD}`
 end
-puts "success."
+polite_raise! comp_result if comp_result.includes? "error"
+polite_raise! "project did not compile successfully" unless File.exists? "crystal_function"
+puts "compilation done."
 puts ""
 
-# call compilation function to get compiled binary
-FileUtils.cd PWD
-puts "compiling function binary in the cloud..."
-compile_url = "https://#{region}-#{project_id}.cloudfunctions.net/compile-crystal"
-HTTP::Client.get(compile_url) do |response|
-  File.write("/tmp/test.blob", response.body_io)
+puts "deploying #{function_name} via gcloud..."
+deploy_resp = `gcloud beta functions deploy #{function_name} --source=. --entry-point=init --memory=#{function_memory} --timeout=540 --trigger-http`
+unless deploy_resp.includes? "status: ACTIVE"
+  polite_raise! "an error occurred deploying #{function_name}:\n#{deploy_resp}"
 end
-puts "success."

@@ -1,8 +1,0 @@
-#!/bin/bash
-gcloud beta functions deploy compile-crystal \
-  --source=. \
-  --entry-point=init \
-  --memory=2048MB \
-  --timeout=540 \
-  --trigger-http
-

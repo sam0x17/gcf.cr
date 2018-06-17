@@ -1,4 +1,4 @@
 #!/bin/bash
 echo "compiling..."
-crystal src/gcf.cr -o gcf --release
+crystal build src/gcf.cr -o gcf --release
 echo "done."
