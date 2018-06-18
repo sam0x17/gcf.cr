@@ -163,7 +163,7 @@ module GCF
       comp_result = `#{CRYSTAL_STATIC_BUILD}`
     else
       puts "compiling static binary using the jrei/crystal-alpine docker image..."
-      comp_result = `docker run --rm -it -v $PWD:/app -w /app jrei/crystal-alpine #{CRYSTAL_STATIC_BUILD}`
+      comp_result = `docker pull jrei/crystal-alpine && docker run --rm -it -v $PWD:/app -w /app jrei/crystal-alpine #{CRYSTAL_STATIC_BUILD}`
     end
     polite_raise! comp_result if comp_result.includes? "error"
     polite_raise! "project did not compile successfully" unless File.exists? "crystal_function"
