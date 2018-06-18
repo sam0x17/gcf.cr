@@ -1,6 +1,6 @@
 require "./spec_helper"
 
-describe Gcf do
+describe GCF do
   # TODO: Write tests
 
   it "works" do
