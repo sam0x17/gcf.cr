@@ -88,9 +88,7 @@ module GCF
     end
   end
 
-  def self.run_gcf
-    parse_options if ::PROGRAM_NAME.ends_with? APPBIN
-    # check prerequisites
+  def self.check_prerequisites
     require_app! "gcloud"
     require_app! "docker"
     if !docker_available? && use_local_crystal
@@ -101,9 +99,53 @@ module GCF
       # crystal is required only if we aren't using docker to generate our crystal binary
       require_app! "crystal"
     end
+  end
 
-    # display usage info if no action to take
-    unless run_deploy
+  def self.prepare_staging_dir
+    self.staging_dir = temp_dir("crystal-gcf-deploy", false)
+    FileUtils.cp_r "#{source_path}/", staging_dir
+    if File.exists? "#{staging_dir}/crystal.js"
+      polite_raise! "you cannot have a file named crystal.js in your source directory"
+    end
+    if File.exists? "#{staging_dir}/package.json"
+      polite_raise! "you cannot have a file named package.json in your source directory"
+    end
+    File.write("#{staging_dir}/package.json", GCF::DeployTemplate::PACKAGE_INFO)
+    File.write("#{staging_dir}/crystal.js", GCF::DeployTemplate::CRYSTAL_JS)
+    FileUtils.rm_rf_if_exists "#{staging_dir}/node_modules"
+    FileUtils.cd staging_dir
+    puts " => staging directory set to \"#{staging_dir}\""
+    puts ""
+  end
+
+  def self.compile_crystal_function
+    if use_local_crystal
+      puts "compiling static binary using local crystal installation: #{`crystal --version`.strip}..."
+      comp_result = `#{CRYSTAL_STATIC_BUILD}`
+    else
+      puts "compiling static binary using the jrei/crystal-alpine docker image..."
+      comp_result = `docker pull jrei/crystal-alpine && docker run --rm -it -v $PWD:/app -w /app jrei/crystal-alpine #{CRYSTAL_STATIC_BUILD}`
+    end
+    polite_raise! comp_result if comp_result.includes? "error"
+    polite_raise! "project did not compile successfully" unless File.exists? "crystal_function"
+    puts "compilation done."
+    puts ""
+  end
+
+  def self.deploy
+    puts "deploying #{function_name} via gcloud..."
+    deploy_resp = `gcloud beta functions deploy #{function_name} --source=. --entry-point=init --memory=#{function_memory} --timeout=540 --trigger-http`
+    unless deploy_resp.includes? "status: ACTIVE"
+      polite_raise! "an error occurred deploying #{function_name}:\n#{deploy_resp}"
+    end
+  end
+
+  def self.run
+    parse_options if ::PROGRAM_NAME.ends_with? APPBIN
+    check_prerequisites
+
+    if ::PROGRAM_NAME.ends_with?(APPBIN) && !run_deploy
+      # display usage info if no action to take
       print_version
       puts "note: you must specify --deploy in order to deploy"
       puts ""
@@ -175,41 +217,10 @@ module GCF
       polite_raise! "non http trigger modes are not yet supported"
     end
 
-    # prepare staging directory
-    self.staging_dir = temp_dir("crystal-gcf-deploy", false)
-    FileUtils.cp_r "#{source_path}/", staging_dir
-    if File.exists? "#{staging_dir}/crystal.js"
-      polite_raise! "you cannot have a file named crystal.js in your source directory"
-    end
-    if File.exists? "#{staging_dir}/package.json"
-      polite_raise! "you cannot have a file named package.json in your source directory"
-    end
-    File.write("#{staging_dir}/package.json", GCF::DeployTemplate::PACKAGE_INFO)
-    File.write("#{staging_dir}/crystal.js", GCF::DeployTemplate::CRYSTAL_JS)
-    FileUtils.rm_rf_if_exists "#{staging_dir}/node_modules"
-    FileUtils.cd staging_dir
-    puts " => staging directory set to \"#{staging_dir}\""
-    puts ""
-
-    # compile crystal function
-    if use_local_crystal
-      puts "compiling static binary using local crystal installation: #{`crystal --version`.strip}..."
-      comp_result = `#{CRYSTAL_STATIC_BUILD}`
-    else
-      puts "compiling static binary using the jrei/crystal-alpine docker image..."
-      comp_result = `docker pull jrei/crystal-alpine && docker run --rm -it -v $PWD:/app -w /app jrei/crystal-alpine #{CRYSTAL_STATIC_BUILD}`
-    end
-    polite_raise! comp_result if comp_result.includes? "error"
-    polite_raise! "project did not compile successfully" unless File.exists? "crystal_function"
-    puts "compilation done."
-    puts ""
-
-    puts "deploying #{function_name} via gcloud..."
-    deploy_resp = `gcloud beta functions deploy #{function_name} --source=. --entry-point=init --memory=#{function_memory} --timeout=540 --trigger-http`
-    unless deploy_resp.includes? "status: ACTIVE"
-      polite_raise! "an error occurred deploying #{function_name}:\n#{deploy_resp}"
-    end
+    prepare_staging_dir
+    compile_crystal_function
+    deploy
   end
 end
 
-GCF.run_gcf if ::PROGRAM_NAME.ends_with? GCF::APPBIN
+GCF.run if ::PROGRAM_NAME.ends_with? GCF::APPBIN
