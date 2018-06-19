@@ -142,6 +142,7 @@ module GCF
 
   def self.run
     parse_options if ::PROGRAM_NAME.ends_with? APPBIN
+    
     check_prerequisites
 
     if ::PROGRAM_NAME.ends_with?(APPBIN) && !run_deploy
@@ -218,7 +219,9 @@ module GCF
     end
 
     prepare_staging_dir
+
     compile_crystal_function
+
     deploy
   end
 end
