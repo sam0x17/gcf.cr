@@ -1,3 +1,8 @@
+def puts_safe(message)
+  return if GCF.silent_mode
+  puts message
+end
+
 module GCF
   def self.polite_raise!(message)
     puts ""
@@ -21,7 +26,7 @@ module GCF
 
   def self.gcloud_project_id
     project_id = `gcloud config get-value project`.strip
-    puts " => obtained project ID \"#{project_id}\" from gcloud"
+    puts_safe " => obtained project ID \"#{project_id}\" from gcloud"
     project_id
   end
 

@@ -24,6 +24,7 @@ module GCF
 
   DEFAULT_RUN_DEPLOY = false
   DEFAULT_USE_LOCAL_CRYSTAL = false
+  DEFAULT_SILENT_MODE = false
 
   meta_property project_id, DEFAULT_PROJECT_ID
   meta_property source_path, DEFAULT_SOURCE_PATH
@@ -37,6 +38,7 @@ module GCF
   meta_property staging_dir, DEFAULT_STAGING_DIR
   meta_property run_deploy, DEFAULT_RUN_DEPLOY
   meta_property use_local_crystal, DEFAULT_USE_LOCAL_CRYSTAL
+  meta_property silent_mode, DEFAULT_SILENT_MODE
 
   @@options_parser : OptionParser | Nil = nil
   def self.options_parser; @@options_parser; end
@@ -58,21 +60,23 @@ module GCF
     @@staging_dir = DEFAULT_STAGING_DIR
     @@run_deploy = DEFAULT_RUN_DEPLOY
     @@use_local_crystal = DEFAULT_USE_LOCAL_CRYSTAL
+    @@silent_mode = DEFAULT_SILENT_MODE
     @@options_parser = nil
   end
 
   def self.print_version
-    puts ""
-    puts "#{APPNAME} v#{GCF::VERSION}"
-    puts ""
+    puts_safe ""
+    puts_safe "#{APPNAME} v#{GCF::VERSION}"
+    puts_safe ""
   end
 
   def self.parse_options
     OptionParser.parse! do |parser|
       parser.banner = "usage: #{APPBIN} [arguments]"
-      parser.on("-h", "--help", "show this help") { puts ""; puts parser; puts "" }
+      parser.on("-h", "--help", "show this help") { puts_safe ""; puts_safe parser; puts_safe "" }
       parser.on("-d", "--deploy", "required to indicate that you intend to deploy") { @@run_deploy = true }
       parser.on("-l", "--local", "attempt to statically compile crystal function using local system crystal") { @@use_local_crystal = true }
+      parser.on("-S", "--silent", "does not print anything during deploy process") { @@silent_mode = true }
       parser.on("-p PROJECT", "--project PROJECT", "Google project ID, defaults to current gcloud setting") { |v| @@project_id = v }
       parser.on("-s PATH", "--source PATH", "path to source code to be deployed, defaults to '.'") { |v| @@source_path = v }
       parser.on("-n NAME", "--name NAME", "cloud function name, defaults to name of directory or repo") { |v| @@function_name = v }
@@ -92,8 +96,8 @@ module GCF
     require_app! "gcloud"
     require_app! "docker"
     if !docker_available? && use_local_crystal
-      puts "error: docker must be set up to work without sudo privileges unless using the --local option. Please see the following guide for more information:"
-      puts "https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user"
+      puts_safe "error: docker must be set up to work without sudo privileges unless using the --local option. Please see the following guide for more information:"
+      puts_safe "https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user"
       exit 1
     else
       # crystal is required only if we aren't using docker to generate our crystal binary
@@ -114,26 +118,26 @@ module GCF
     File.write("#{staging_dir}/crystal.js", GCF::DeployTemplate::CRYSTAL_JS)
     FileUtils.rm_rf_if_exists "#{staging_dir}/node_modules"
     FileUtils.cd staging_dir
-    puts " => staging directory set to \"#{staging_dir}\""
-    puts ""
+    puts_safe " => staging directory set to \"#{staging_dir}\""
+    puts_safe ""
   end
 
   def self.compile_crystal_function
     if use_local_crystal
-      puts "compiling static binary using local crystal installation: #{`crystal --version`.strip}..."
+      puts_safe "compiling static binary using local crystal installation: #{`crystal --version`.strip}..."
       comp_result = `#{CRYSTAL_STATIC_BUILD}`
     else
-      puts "compiling static binary using the jrei/crystal-alpine docker image..."
+      puts_safe "compiling static binary using the jrei/crystal-alpine docker image..."
       comp_result = `docker pull jrei/crystal-alpine && docker run --rm -it -v $PWD:/app -w /app jrei/crystal-alpine #{CRYSTAL_STATIC_BUILD}`
     end
     polite_raise! comp_result if comp_result.includes? "error"
     polite_raise! "project did not compile successfully" unless File.exists? "crystal_function"
-    puts "compilation done."
-    puts ""
+    puts_safe "compilation done."
+    puts_safe ""
   end
 
   def self.deploy
-    puts "deploying #{function_name} via gcloud..."
+    puts_safe "deploying #{function_name} via gcloud..."
     deploy_resp = `gcloud beta functions deploy #{function_name} --source=. --entry-point=init --memory=#{function_memory} --timeout=540 --trigger-http`
     unless deploy_resp.includes? "status: ACTIVE"
       polite_raise! "an error occurred deploying #{function_name}:\n#{deploy_resp}"
@@ -142,25 +146,25 @@ module GCF
 
   def self.run
     parse_options if ::PROGRAM_NAME.ends_with? APPBIN
-    
+
     check_prerequisites
 
     if ::PROGRAM_NAME.ends_with?(APPBIN) && !run_deploy
       # display usage info if no action to take
       print_version
-      puts "note: you must specify --deploy in order to deploy"
-      puts ""
-      puts options_parser
-      puts ""
+      puts_safe "note: you must specify --deploy in order to deploy"
+      puts_safe ""
+      puts_safe options_parser
+      puts_safe ""
       exit 0
     end
 
     print_version
-    puts "preparing for deployment..."
+    puts_safe "preparing for deployment..."
 
     # check for valid region
     if region != "us-central1"
-      puts "error: the only valid cloud function region at the moment is \"us-central1\". You specified \"#{region}\""
+      puts_safe "error: the only valid cloud function region at the moment is \"us-central1\". You specified \"#{region}\""
       exit 1
     end
 
@@ -168,7 +172,7 @@ module GCF
     if project_id == ""
       self.project_id = gcloud_project_id
     else
-      puts " => set project ID to \"#{project_id}\""
+      puts_safe " => set project ID to \"#{project_id}\""
     end
 
     # parse source_path
@@ -176,17 +180,17 @@ module GCF
     FileUtils.cd source_path
     self.source_path = FileUtils.pwd
     source_directory_name = File.basename(source_path)
-    puts " => source path set to \"#{source_path}\""
+    puts_safe " => source path set to \"#{source_path}\""
 
     # parse function_name
     self.function_name = source_directory_name if function_name == ""
-    puts " => function_name set to \"#{function_name}\""
+    puts_safe " => function_name set to \"#{function_name}\""
 
     # parse memory
     unless POSSIBLE_MEMORY_CONFIGS.includes?(function_memory)
       polite_raise! "#{function_memory} is not a valid memory configuration. Must be one of #{POSSIBLE_MEMORY_CONFIGS}"
     end
-    puts " => function memory set to #{function_memory}"
+    puts_safe " => function memory set to #{function_memory}"
 
     # parse trigger mode
     orig_trigger_mode = trigger_mode
@@ -194,11 +198,11 @@ module GCF
     when "http"
       self.trigger_mode = :http
       self.http_trigger = "https://#{region}-#{project_id}.cloudfunctions.net/#{function_name}"
-      puts " => trigger mode set to http on \"#{http_trigger}\""
+      puts_safe " => trigger mode set to http on \"#{http_trigger}\""
     when "topic"
       self.trigger_mode = :topic
       polite_raise! "must define a topic when using a topic-based trigger mode" if topic == ""
-      puts " => trigger mode set to topic on topic \"#{topic}\""
+      puts_safe " => trigger mode set to topic on topic \"#{topic}\""
     when "bucket-create"; self.trigger_mode = :bucket_create
     when "bucket-delete"; self.trigger_mode = :bucket_delete
     when "bucket-archive"; self.trigger_mode = :bucket_archive
@@ -211,7 +215,7 @@ module GCF
     case trigger_mode
     when :bucket_create, :bucket_delete, :bucket_archive, :bucket_metadata_update
       polite_raise! "must define a bucket name when using a bucket-based trigger mode" if bucket == ""
-      puts " => trigger mode set to #{orig_trigger_mode} on bucket \"#{bucket}\""
+      puts_safe " => trigger mode set to #{orig_trigger_mode} on bucket \"#{bucket}\""
     end
 
     unless trigger_mode == :http
