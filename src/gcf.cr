@@ -11,7 +11,55 @@ module GCF
   PWD = `pwd`.strip
   CRYSTAL_STATIC_BUILD = "crystal build src/*.cr -o crystal_function --release --static --no-debug"
 
-  run_gcf if ::PROGRAM_NAME.ends_with? APPBIN
+  DEFAULT_PROJECT_ID = ""
+  DEFAULT_SOURCE_PATH = "."
+  DEFAULT_FUNCTION_NAME = ""
+  DEFAULT_HTTP_TRIGGER = ""
+  DEFAULT_REGION = "us-central1"
+  DEFAULT_FUNCTION_MEMORY = "128MB"
+  DEFAULT_TRIGGER_MODE = "http"
+  DEFAULT_BUCKET = ""
+  DEFAULT_TOPIC = ""
+  DEFAULT_STAGING_DIR = ""
+
+  DEFAULT_RUN_DEPLOY = false
+  DEFAULT_USE_LOCAL_CRYSTAL = false
+
+  meta_property project_id, DEFAULT_PROJECT_ID
+  meta_property source_path, DEFAULT_SOURCE_PATH
+  meta_property function_name, DEFAULT_FUNCTION_NAME
+  meta_property http_trigger, DEFAULT_HTTP_TRIGGER
+  meta_property region, DEFAULT_REGION
+  meta_property function_memory, DEFAULT_FUNCTION_MEMORY
+  meta_property trigger_mode, DEFAULT_TRIGGER_MODE
+  meta_property bucket, DEFAULT_BUCKET
+  meta_property topic, DEFAULT_TOPIC
+  meta_property staging_dir, DEFAULT_STAGING_DIR
+  meta_property run_deploy, DEFAULT_RUN_DEPLOY
+  meta_property use_local_crystal, DEFAULT_USE_LOCAL_CRYSTAL
+
+  @@options_parser : OptionParser | Nil = nil
+  def self.options_parser; @@options_parser; end
+  def self.options_parser=(val); @@options_parser = val; end
+  @@trigger_mode : String | Symbol = DEFAULT_TRIGGER_MODE
+  def self.trigger_mode; @@trigger_mode; end
+  def self.trigger_mode=(val); @@trigger_mode = val; end
+
+  def self.reset_config
+    @@project_id = DEFAULT_PROJECT_ID
+    @@source_path = DEFAULT_SOURCE_PATH
+    @@function_name = DEFAULT_FUNCTION_NAME
+    @@http_trigger = DEFAULT_HTTP_TRIGGER
+    @@region = DEFAULT_REGION
+    @@function_memory = DEFAULT_FUNCTION_MEMORY
+    @@trigger_mode = DEFAULT_TRIGGER_MODE
+    @@bucket = DEFAULT_BUCKET
+    @@topic = DEFAULT_TOPIC
+    @@staging_dir = DEFAULT_STAGING_DIR
+    @@run_deploy = DEFAULT_RUN_DEPLOY
+    @@use_local_crystal = DEFAULT_USE_LOCAL_CRYSTAL
+    @@options_parser = nil
+  end
 
   def self.print_version
     puts ""
@@ -19,47 +67,33 @@ module GCF
     puts ""
   end
 
-  def self.run_gcf
-    # initialize config info
-    project_id = ""
-    source_path = "."
-    function_name = ""
-    http_trigger = ""
-    region = "us-central1"
-    function_memory = "128MB"
-    trigger_mode = "http"
-    bucket = ""
-    topic = ""
-
-    run_deploy = false
-    use_local_crystal = false
-
-    options_parser = nil
-
-    # read command line args
+  def self.parse_options
     OptionParser.parse! do |parser|
       parser.banner = "usage: #{APPBIN} [arguments]"
       parser.on("-h", "--help", "show this help") { puts ""; puts parser; puts "" }
-      parser.on("-d", "--deploy", "required to indicate that you intend to deploy") { run_deploy = true }
-      parser.on("-l", "--local", "attempt to statically compile crystal function using local system crystal") { use_local_crystal = true }
-      parser.on("-p PROJECT", "--project PROJECT", "Google project ID, defaults to current gcloud setting") { |v| project_id = v }
-      parser.on("-s PATH", "--source PATH", "path to source code to be deployed, defaults to '.'") { |v| source_path = v }
-      parser.on("-n NAME", "--name NAME", "cloud function name, defaults to name of directory or repo") { |v| function_name = v }
-      parser.on("-r REGION", "--region REGION", "region for cloud function deployment, only us-central1 is valid") { |v| region = v }
-      parser.on("-m MEMORY", "--memory MEMORY", "ram/memory allocated for cloud function, valid: 128MB | 256MB | 512MB | 1GB | 2GB") { |v| function_memory = v }
+      parser.on("-d", "--deploy", "required to indicate that you intend to deploy") { @@run_deploy = true }
+      parser.on("-l", "--local", "attempt to statically compile crystal function using local system crystal") { @@use_local_crystal = true }
+      parser.on("-p PROJECT", "--project PROJECT", "Google project ID, defaults to current gcloud setting") { |v| @@project_id = v }
+      parser.on("-s PATH", "--source PATH", "path to source code to be deployed, defaults to '.'") { |v| @@source_path = v }
+      parser.on("-n NAME", "--name NAME", "cloud function name, defaults to name of directory or repo") { |v| @@function_name = v }
+      parser.on("-r REGION", "--region REGION", "region for cloud function deployment, only us-central1 is valid") { |v| @@region = v }
+      parser.on("-m MEMORY", "--memory MEMORY", "ram/memory allocated for cloud function, valid: 128MB | 256MB | 512MB | 1GB | 2GB") { |v| @@function_memory = v }
       parser.on("-t TRIGGER", "--trigger TRIGGER", "trigger mode for the cloud function, valid: http, topic, bucket-create, bucket-delete, bucket-archive, bucket-metadata-update") do |v|
-        trigger_mode = v
+        @@trigger_mode = v
       end
-      parser.on("-T TOPIC", "--topic TOPIC", "trigger topic name when deploying a topic-triggered cloud function") { |v| topic = v }
-      parser.on("-b BUCKET", "--bucket BUCKET", "trigger bucket name when deploying using a bucket-triggered cloud function") { |v| bucket = v }
+      parser.on("-T TOPIC", "--topic TOPIC", "trigger topic name when deploying a topic-triggered cloud function") { |v| @@topic = v }
+      parser.on("-b BUCKET", "--bucket BUCKET", "trigger bucket name when deploying using a bucket-triggered cloud function") { |v| @@bucket = v }
       parser.on("-v", "--version", "prints the version") { print_version }
-      options_parser = parser
+      @@options_parser = parser
     end
+  end
 
+  def self.run_gcf
+    parse_options if ::PROGRAM_NAME.ends_with? APPBIN
     # check prerequisites
     require_app! "gcloud"
     require_app! "docker"
-    if !docker_available? && !use_local_crystal
+    if !docker_available? && use_local_crystal
       puts "error: docker must be set up to work without sudo privileges unless using the --local option. Please see the following guide for more information:"
       puts "https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user"
       exit 1
@@ -89,7 +123,7 @@ module GCF
 
     # get project_id from gcloud if not already set
     if project_id == ""
-      project_id = gcloud_project_id
+      self.project_id = gcloud_project_id
     else
       puts " => set project ID to \"#{project_id}\""
     end
@@ -97,12 +131,12 @@ module GCF
     # parse source_path
     raise "source directory could not be found" unless File.exists?(source_path)
     FileUtils.cd source_path
-    source_path = FileUtils.pwd
+    self.source_path = FileUtils.pwd
     source_directory_name = File.basename(source_path)
     puts " => source path set to \"#{source_path}\""
 
     # parse function_name
-    function_name = source_directory_name if function_name == ""
+    self.function_name = source_directory_name if function_name == ""
     puts " => function_name set to \"#{function_name}\""
 
     # parse memory
@@ -115,17 +149,17 @@ module GCF
     orig_trigger_mode = trigger_mode
     case trigger_mode
     when "http"
-      trigger_mode = :http
-      http_trigger = "https://#{region}-#{project_id}.cloudfunctions.net/#{function_name}"
+      self.trigger_mode = :http
+      self.http_trigger = "https://#{region}-#{project_id}.cloudfunctions.net/#{function_name}"
       puts " => trigger mode set to http on \"#{http_trigger}\""
     when "topic"
-      trigger_mode = :topic
+      self.trigger_mode = :topic
       polite_raise! "must define a topic when using a topic-based trigger mode" if topic == ""
       puts " => trigger mode set to topic on topic \"#{topic}\""
-    when "bucket-create"; trigger_mode = :bucket_create
-    when "bucket-delete"; trigger_mode = :bucket_delete
-    when "bucket-archive"; trigger_mode = :bucket_archive
-    when "bucket-metadata-update"; trigger_mode = :bucket_metadata_update
+    when "bucket-create"; self.trigger_mode = :bucket_create
+    when "bucket-delete"; self.trigger_mode = :bucket_delete
+    when "bucket-archive"; self.trigger_mode = :bucket_archive
+    when "bucket-metadata-update"; self.trigger_mode = :bucket_metadata_update
     else
       polite_raise! "trigger mode must be one of #{POSSIBLE_TRIGGER_MODES}"
     end
@@ -142,7 +176,7 @@ module GCF
     end
 
     # prepare staging directory
-    staging_dir = temp_dir("crystal-gcf-deploy", false)
+    self.staging_dir = temp_dir("crystal-gcf-deploy", false)
     FileUtils.cp_r "#{source_path}/", staging_dir
     if File.exists? "#{staging_dir}/crystal.js"
       polite_raise! "you cannot have a file named crystal.js in your source directory"
@@ -177,3 +211,5 @@ module GCF
     end
   end
 end
+
+GCF.run_gcf if ::PROGRAM_NAME.ends_with? GCF::APPBIN
