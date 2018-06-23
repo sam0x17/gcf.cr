@@ -2,7 +2,7 @@ version: 2
 jobs:
   test:
     docker:
-      - image: ubuntu:xenial
+      - image: arch:latest
     steps:
       - checkout
       - run: apt-get update
