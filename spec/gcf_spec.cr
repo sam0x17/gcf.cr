@@ -1,9 +1,7 @@
 require "./spec_helper"
 
 describe GCF do
-  # TODO: Write tests
-
-  it "works" do
-    false.should eq(true)
+  it "checks for prerequisites" do
+    GCF.check_prerequisites
   end
 end

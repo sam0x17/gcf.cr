@@ -21,7 +21,8 @@ module GCF
   end
 
   def self.docker_available?
-    !`docker info`.includes? "denied"
+    output = `docker info`
+    !(output.includes?("denied") || output.includes?("Cannot connect to the Docker daemon"))
   end
 
   def self.gcloud_project_id
