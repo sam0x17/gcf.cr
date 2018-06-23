@@ -230,4 +230,5 @@ module GCF
   end
 end
 
+# allow for specs / etc to include GCF as a lib without it running
 GCF.run if ::PROGRAM_NAME.ends_with? GCF::APPBIN
