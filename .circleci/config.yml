@@ -2,7 +2,7 @@ version: 2
 jobs:
   test:
     docker:
-      - image: arch:latest
+      - image: base:archlinux
     steps:
       - checkout
       - run: apt-get update
