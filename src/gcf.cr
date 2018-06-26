@@ -171,12 +171,12 @@ module GCF
     puts_safe "preparing for deployment..."
 
     # ensure that static compilation is available if not using docker
-    if use_local_crystal
-      puts_safe " => local static compilation available? #{static_compilation_available?}"
-      unless static_compilation_available?
-        polite_raise! "missing dependencies required for local static compilation."
-      end
-    end
+    #if use_local_crystal
+    #  puts_safe " => local static compilation available? #{static_compilation_available?}"
+    #  unless static_compilation_available?
+    #    polite_raise! "missing dependencies required for local static compilation."
+    #  end
+    #end
 
     # check for valid region
     if region != "us-central1"

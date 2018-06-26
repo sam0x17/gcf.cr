@@ -23,6 +23,8 @@ module GCF
     res = `#{dir}/compile.sh`
     FileUtils.cd pwd
     @@static_comp_available = !res.downcase.includes? "error"
+    puts "STATIC COMPILATION: #{@@static_comp_available}"
+    @@static_comp_available
   end
 
   def self.app_installed?(bin)
