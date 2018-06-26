@@ -10,6 +10,7 @@ module GCF
   POSSIBLE_TRIGGER_MODES = ["http", "topic", "bucket-create", "bucket-delete", "bucket-archive", "bucket-metadata-update"]
   PWD = `pwd`.strip
   CRYSTAL_STATIC_BUILD = "crystal build src/*.cr -o crystal_function --release --static --no-debug"
+  CRYSTAL_BUILD = "crystal build src/*.cr -o crystal_function --release"
 
   DEFAULT_PROJECT_ID = ""
   DEFAULT_SOURCE_PATH = "."
@@ -25,6 +26,7 @@ module GCF
   DEFAULT_RUN_DEPLOY = false
   DEFAULT_USE_LOCAL_CRYSTAL = false
   DEFAULT_SILENT_MODE = false
+  DEFAULT_TEST_MODE = false
 
   meta_property project_id, DEFAULT_PROJECT_ID
   meta_property source_path, DEFAULT_SOURCE_PATH
@@ -39,6 +41,8 @@ module GCF
   meta_property run_deploy, DEFAULT_RUN_DEPLOY
   meta_property use_local_crystal, DEFAULT_USE_LOCAL_CRYSTAL
   meta_property silent_mode, DEFAULT_SILENT_MODE
+  meta_property test_mode, DEFAULT_TEST_MODE
+  meta_property deploy_ran, false
 
   @@options_parser : OptionParser | Nil = nil
   def self.options_parser; @@options_parser; end
@@ -61,7 +65,9 @@ module GCF
     @@run_deploy = DEFAULT_RUN_DEPLOY
     @@use_local_crystal = DEFAULT_USE_LOCAL_CRYSTAL
     @@silent_mode = DEFAULT_SILENT_MODE
+    @@test_mode = DEFAULT_TEST_MODE
     @@options_parser = nil
+    @@deploy_ran = false
   end
 
   def self.print_version
@@ -137,6 +143,7 @@ module GCF
   end
 
   def self.deploy
+    return if test_mode
     puts_safe "deploying #{function_name} via gcloud..."
     deploy_resp = `gcloud beta functions deploy #{function_name} --source=. --entry-point=init --memory=#{function_memory} --timeout=540 --trigger-http`
     unless deploy_resp.includes? "status: ACTIVE"
@@ -147,20 +154,29 @@ module GCF
   def self.run
     parse_options if ::PROGRAM_NAME.ends_with? APPBIN
 
-    check_prerequisites
-
-    if ::PROGRAM_NAME.ends_with?(APPBIN) && !run_deploy
+    unless run_deploy
       # display usage info if no action to take
       print_version
       puts_safe "note: you must specify --deploy in order to deploy"
       puts_safe ""
       puts_safe options_parser
       puts_safe ""
-      exit 0
+      exit 0 if ::PROGRAM_NAME.ends_with? APPBIN
+      return
     end
+
+    check_prerequisites
 
     print_version
     puts_safe "preparing for deployment..."
+
+    # ensure that static compilation is available if not using docker
+    if use_local_crystal
+      puts_safe " => local static compilation available? #{static_compilation_available?}"
+      unless static_compilation_available?
+        polite_raise! "missing dependencies required for local static compilation."
+      end
+    end
 
     # check for valid region
     if region != "us-central1"
@@ -223,10 +239,10 @@ module GCF
     end
 
     prepare_staging_dir
-
     compile_crystal_function
-
     deploy
+
+    self.deploy_ran = true
   end
 end
 
