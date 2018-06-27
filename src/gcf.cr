@@ -195,6 +195,7 @@ module GCF
     FileUtils.cd source_path
     self.source_path = FileUtils.pwd
     source_directory_name = File.basename(source_path)
+    puts "SOURCE DIRECTORY: #{source_path}"
     puts_safe " => source path set to \"#{source_path}\""
 
     # parse function_name
