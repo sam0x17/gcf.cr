@@ -55,7 +55,6 @@ module GCF
   def self.random_string(length)
     st = ""
     length.times { st += random_alpha_numeric }
-    puts "RANDOM STRING: #{st}"
     st
   end
 
