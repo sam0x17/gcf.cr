@@ -111,12 +111,12 @@ module GCF
   end
 
   def self.prepare_staging_dir
-    if File.exists? "#{source_path}/crystal.js"
-      polite_raise! "you cannot have a file named crystal.js in your source directory"
-    end
-    if File.exists? "#{source_path}/package.json"
-      polite_raise! "you cannot have a file named package.json in your source directory"
-    end
+    #if File.exists? "#{source_path}/crystal.js"
+    #  polite_raise! "you cannot have a file named crystal.js in your source directory"
+    #end
+    #if File.exists? "#{source_path}/package.json"
+    #  polite_raise! "you cannot have a file named package.json in your source directory"
+    #end
     self.staging_dir = temp_dir("crystal-gcf-deploy", false)
     FileUtils.cp_r "#{source_path}/", staging_dir
     File.write("#{staging_dir}/package.json", GCF::DeployTemplate::PACKAGE_INFO)
