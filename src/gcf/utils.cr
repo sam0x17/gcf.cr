@@ -8,6 +8,7 @@ module GCF
     puts ""
     puts "error: #{message}"
     puts ""
+    raise message if test_mode
     exit 1
   end
 

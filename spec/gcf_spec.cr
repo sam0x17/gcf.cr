@@ -29,13 +29,11 @@ describe GCF do
   end
 
   it "deploys correctly if --deploy is specified" do
-    puts "THIS SPEC"
     GCF.project_id = "test-project"
     GCF.deploy_ran.should eq false
     GCF.run_deploy = true
     GCF.run
     GCF.deploy_ran.should eq true
-    puts "YEAH THIS ONE"
   end
 
   it "deploys http_trigger functions correctly" do
