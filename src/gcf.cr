@@ -173,7 +173,11 @@ module GCF
     if use_local_crystal
       puts_safe " => local static compilation available? #{static_compilation_available?}"
       unless static_compilation_available?
-        polite_raise! "missing dependencies required for local static compilation."
+        if test_mode
+          self.use_local_crystal = false
+        else
+          polite_raise! "missing dependencies required for local static compilation."
+        end
       end
     end
 
