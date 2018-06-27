@@ -242,6 +242,7 @@ module GCF
     compile_crystal_function
     deploy
 
+    FileUtils.cd PWD
     self.deploy_ran = true
   end
 end

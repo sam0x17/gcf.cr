@@ -44,6 +44,6 @@ describe GCF do
     GCF.run
     GCF.deploy_ran.should eq true
     GCF.http_trigger.should_not eq GCF::DEFAULT_HTTP_TRIGGER
-    GCF.http_trigger.should eq "https://us-central1-test-project.cloudfunctions.net/gcf.cr"
+    GCF.http_trigger.should eq "https://us-central1-test-project.cloudfunctions.net/#{File.basename GCF::PWD}"
   end
 end
