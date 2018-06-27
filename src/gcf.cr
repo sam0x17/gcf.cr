@@ -113,6 +113,10 @@ module GCF
   def self.prepare_staging_dir
     self.staging_dir = temp_dir("crystal-gcf-deploy", false)
     FileUtils.cp_r "#{source_path}/", staging_dir
+    puts "source path: #{source_path}"
+    puts `ls -lh #{source_path}`
+    puts "staging dir: #{staging_dir}"
+    puts `ls -lh #{staging_dir}`
     if File.exists? "#{staging_dir}/crystal.js"
       polite_raise! "you cannot have a file named crystal.js in your source directory"
     end
