@@ -6,5 +6,4 @@ Spec.before_each do
   GCF.test_mode = true
   GCF.silent_mode = true
   GCF.use_local_crystal = true
-  sleep 3
 end

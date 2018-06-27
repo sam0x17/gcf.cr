@@ -59,7 +59,7 @@ module GCF
   end
 
   def self.temp_dir(prefix, create = true)
-    dir = "/tmp/#{prefix}-#{Time.now.epoch}"
+    dir = "/tmp/#{prefix}-#{Time.now.epoch}-#{random_string(6)}"
     FileUtils.mkdir_p dir
     FileUtils.rm_rf dir # delete if existed before
     FileUtils.mkdir_p(dir) if create
