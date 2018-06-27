@@ -111,18 +111,14 @@ module GCF
   end
 
   def self.prepare_staging_dir
-    self.staging_dir = temp_dir("crystal-gcf-deploy", false)
-    FileUtils.cp_r "#{source_path}/", staging_dir
-    puts "source path: #{source_path}"
-    puts `ls -lh #{source_path}`
-    puts "staging dir: #{staging_dir}"
-    puts `ls -lh #{staging_dir}`
-    if File.exists? "#{staging_dir}/crystal.js"
+    if File.exists? "#{source_path}/crystal.js"
       polite_raise! "you cannot have a file named crystal.js in your source directory"
     end
-    if File.exists? "#{staging_dir}/package.json"
+    if File.exists? "#{source_path}/package.json"
       polite_raise! "you cannot have a file named package.json in your source directory"
     end
+    self.staging_dir = temp_dir("crystal-gcf-deploy", false)
+    FileUtils.cp_r "#{source_path}/", staging_dir
     File.write("#{staging_dir}/package.json", GCF::DeployTemplate::PACKAGE_INFO)
     File.write("#{staging_dir}/crystal.js", GCF::DeployTemplate::CRYSTAL_JS)
     FileUtils.rm_rf_if_exists "#{staging_dir}/node_modules"
