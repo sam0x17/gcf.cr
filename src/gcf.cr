@@ -132,8 +132,8 @@ module GCF
       puts_safe "compiling static binary using local crystal installation: #{`crystal --version`.strip}..."
       comp_result = `#{CRYSTAL_STATIC_BUILD}`
     else
-      puts_safe "compiling static binary using the jrei/crystal-alpine docker image..."
-      comp_result = `docker pull durosoft/crystal-alpine && docker run --rm -it -v $PWD:/app -w /app jrei/crystal-alpine #{CRYSTAL_STATIC_BUILD}`
+      puts_safe "compiling static binary using the durosoft/crystal-alpine docker image..."
+      comp_result = `docker pull durosoft/crystal-alpine && docker run --rm -it -v $PWD:/app -w /app durosoft/crystal-alpine #{CRYSTAL_STATIC_BUILD}`
     end
     polite_raise! comp_result if comp_result.includes? "error"
     polite_raise! "project did not compile successfully" unless File.exists? "crystal_function"
@@ -170,12 +170,12 @@ module GCF
     puts_safe "preparing for deployment..."
 
     # ensure that static compilation is available if not using docker
-    #if use_local_crystal
-    #  puts_safe " => local static compilation available? #{static_compilation_available?}"
-    #  unless static_compilation_available?
-    #    polite_raise! "missing dependencies required for local static compilation."
-    #  end
-    #end
+    if use_local_crystal
+      puts_safe " => local static compilation available? #{static_compilation_available?}"
+      unless static_compilation_available?
+        polite_raise! "missing dependencies required for local static compilation."
+      end
+    end
 
     # check for valid region
     if region != "us-central1"
