@@ -19,9 +19,7 @@ module GCF
     dir = temp_dir "compile-test"
     FileUtils.cd dir
     File.write(dir + "/test.cr", "exit 0")
-    File.write(dir + "/compile.sh", "#!/bin/bash\ncrystal build test.cr --static --no-debug 2>&1")
-    `chmod +x #{dir}/compile.sh`
-    res = `#{dir}/compile.sh`
+    res = `crystal build test.cr --static --no-debug 2>&1`
     FileUtils.cd pwd
     @@static_comp_available = !res.downcase.includes? "error"
   end
