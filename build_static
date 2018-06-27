@@ -1,4 +1,4 @@
 #!/bin/bash
 echo "compiling..."
-docker run --rm -it -v $PWD:/app -w /app jrei/crystal-alpine crystal build src/gcf.cr -o gcf --release --static --no-debug
+docker run --rm -it -v $PWD:/app -w /app durosoft/crystal-alpine:latest crystal build src/gcf.cr -o gcf --release --static --no-debug
 echo "done."
