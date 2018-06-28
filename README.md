@@ -2,8 +2,8 @@
 
 [![CircleCI](https://circleci.com/gh/sam0x17/gcf.cr.svg?style=svg)](https://circleci.com/gh/sam0x17/gcf.cr)
 
-Gcf.cr provides managed execution of crystal language code within Google Cloud Functions.
-Gcf.cr compiles your crystal code statically using the [durosoft/crystal-alpine](https://hub.docker.com/r/durosoft/crystal-alpine/)
+GCF provides managed execution of crystal language code within Google Cloud Functions.
+GCF compiles your crystal code statically using the [durosoft/crystal-alpine](https://hub.docker.com/r/durosoft/crystal-alpine/)
 docker image or optionally using your local crystal installation (if it is capable of static compilation) via the `--local` option.
 It then bundles your compiled crystal code in a thin node.js wrapper function and deploys it to GCP using
 the options you specify. An API is also provided for writing to the console, throwing errors, and returning
@@ -27,4 +27,30 @@ Otherwise you can use the `build_static` script included in the repo to build a 
 
 ## Usage
 
-TODO: Write usage instructions here
+Note that GCF expects your crystal function to follow the directory structure imposed by `crystal init app`, in that
+all of your crystal code should reside in `project_name/src/`. During compilation, GCF uses the `src/*.cr` glob to
+compile all crystal files in the src directory.
+
+Note also that GCF will automatically consult `gcloud` to discover the current GCP project id if one isn't specified.
+
+Below you can find some basic usage examples fo rcommon use cases. For full usage information, please see the output
+of `gcf --help`.
+
+Compile the current directory using the docker image and deploy as a function named after the current directory (default):
+
+```bash
+gcf --deploy
+```
+
+Specifying the source directory, static compilation using the local crystal installation, the function name, the
+memory capacity of the deployed function, and the google project ID respectively.
+
+```bash
+gcf --deploy --source /home/sam/proj --local --name hello-world --memory 2GB --project cool-project
+```
+
+Or using shorthand:
+
+```bash
+gcf -d -s /home/sam/proj -l -n hello-world -m 2GB -p cool-project
+```
