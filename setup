@@ -1,0 +1,4 @@
+#!/bin/bash
+./build || exit 1
+sudo cp gcf /usr/bin/ || exit 1
+echo "gcf binary successfully installed"
