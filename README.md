@@ -1,5 +1,7 @@
 # gcf.cr
 
+[![CircleCI](https://circleci.com/gh/sam0x17/gcf.cr.svg?style=svg)](https://circleci.com/gh/sam0x17/gcf.cr)
+
 gcf.cr provides managed execution of crystal language code within Google Cloud Functions.
 Functions are deployed automatically in a two stage process:
 
