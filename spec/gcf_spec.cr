@@ -1,5 +1,16 @@
 require "./spec_helper"
 
+class TestCloudFunction < GCF::CloudFunction
+  def run
+    console.log "info test 1"
+    console.log "info test 2"
+    console.warn "warn test 1"
+    console.warn "warn test 2"
+    console.error "error test 1"
+    console.error "error test 2"
+  end
+end
+
 describe GCF do
   it "checks for prerequisites" do
     GCF.check_prerequisites
@@ -45,5 +56,43 @@ describe GCF do
     GCF.deploy_ran.should eq true
     GCF.http_trigger.should_not eq GCF::DEFAULT_HTTP_TRIGGER
     GCF.http_trigger.should eq "https://us-central1-test-project.cloudfunctions.net/#{File.basename GCF::PWD}"
+  end
+
+  describe "integration" do
+    it "writes to info log correctly" do
+      cf = TestCloudFunction.new
+      cf.run
+      File.read("/tmp/.gcf_info_log").should eq "info test 1\ninfo test 2\n"
+    end
+
+    it "writes to warn log correctly" do
+      cf = TestCloudFunction.new
+      cf.run
+      File.read("/tmp/.gcf_warn_log").should eq "warn test 1\nwarn test 2\n"
+    end
+
+    it "writes to error log correctly" do
+      cf = TestCloudFunction.new
+      cf.run
+      File.read("/tmp/.gcf_error_log").should eq "error test 1\nerror test 2\n"
+    end
+
+    it "sends status correctly for text" do
+      cf = TestCloudFunction.new
+      cf.send("test")
+      File.read("/tmp/.gcf_status").should eq "200"
+    end
+
+    it "sends status correctly for files" do
+      cf = TestCloudFunction.new
+      cf.send_file(300, "test")
+      File.read("/tmp/.gcf_status").should eq "300"
+    end
+
+    it "redirects correctly" do
+      cf = TestCloudFunction.new
+      cf.redirect("http://www.google.com")
+      File.read("/tmp/.gcf_redirect_output").should eq "http://www.google.com"
+    end
   end
 end
