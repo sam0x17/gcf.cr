@@ -92,7 +92,15 @@ describe GCF do
     it "redirects correctly" do
       cf = TestCloudFunction.new
       cf.redirect("http://www.google.com")
-      File.read("/tmp/.gcf_redirect_output").should eq "http://www.google.com"
+      File.read("/tmp/.gcf_redirect_url").should eq "http://www.google.com"
+      File.read("/tmp/.gcf_redirect_mode").should eq "302"
+    end
+
+    it "perma redirects correctly" do
+      cf = TestCloudFunction.new
+      cf.redirect(true, "http://www.google.com")
+      File.read("/tmp/.gcf_redirect_url").should eq "http://www.google.com"
+      File.read("/tmp/.gcf_redirect_mode").should eq "301"
     end
   end
 end

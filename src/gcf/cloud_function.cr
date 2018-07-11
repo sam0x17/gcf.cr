@@ -31,13 +31,15 @@ abstract class GCF::CloudFunction
   def initialize
     File.delete("/tmp/.gcf_text_output") if File.exists?("/tmp/.gcf_text_output")
     File.delete("/tmp/.gcf_file_output") if File.exists?("/tmp/.gcf_file_output")
-    File.delete("/tmp/.gcf_redirect_output") if File.exists?("/tmp/.gcf_redirect_output")
+    File.delete("/tmp/.gcf_redirect_url") if File.exists?("/tmp/.gcf_redirect_url")
+    File.delete("/tmp/.gcf_redirect_mode") if File.exists?("/tmp/.gcf_redirect_mode")
     File.delete("/tmp/.gcf_status") if File.exists?("/tmp/.gcf_status")
     @console = Console.new
     @text_output = File.new "/tmp/.gcf_text_output", "w"
     @file_output = File.new "/tmp/.gcf_file_output", "w"
-    @redirect_output = File.new "/tmp/.gcf_redirect_output", "w"
-    @status_output = File.new "/tmp/.gcf_status", "w"
+    @redirect_url = File.new "/tmp/.gcf_redirect_url", "w"
+    @redirect_mode = File.new "/tmp/.gcf_redirect_mode", "w"
+    @status_code = File.new "/tmp/.gcf_status", "w"
   end
 
   def puts(msg)
@@ -74,12 +76,17 @@ abstract class GCF::CloudFunction
     exit 0 unless GCF.test_mode
   end
 
-  def redirect(url)
-    #TODO: 300 vs 301
+  def redirect(url : String)
+    redirect false, url
+  end
+
+  def redirect(permanent : Bool, url : String)
     no_text_output
     no_file_output
-    @redirect_output.write url.to_s.to_slice
-    @redirect_output.close
+    @redirect_url.write url.to_s.to_slice
+    @redirect_url.close
+    @redirect_mode.write (permanent ? 301 : 302).to_s.to_slice
+    @redirect_mode.close
     exit 0 unless GCF.test_mode
   end
 
@@ -96,12 +103,14 @@ abstract class GCF::CloudFunction
   end
 
   private def no_redirect_output
-    @redirect_output.close
-    File.delete @redirect_output.path
+    @redirect_url.close
+    File.delete @redirect_url.path
+    @redirect_mode.close
+    File.delete @redirect_mode.path
   end
 
   private def write_status(status : Int)
-    @status_output.write status.to_s.to_slice
-    @status_output.close
+    @status_code.write status.to_s.to_slice
+    @status_code.close
   end
 end
