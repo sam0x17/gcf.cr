@@ -21,20 +21,17 @@ end
 describe GCF do
   describe "integration" do
     it "writes to info log correctly" do
-      cf = TestCloudFunction.new
-      cf.run
+      TestCloudFunction.exec
       File.read("/tmp/.gcf_info_log").should eq "info test 1\ninfo test 2\n"
     end
 
     it "writes to warn log correctly" do
-      cf = TestCloudFunction.new
-      cf.run
+      TestCloudFunction.exec
       File.read("/tmp/.gcf_warn_log").should eq "warn test 1\nwarn test 2\n"
     end
 
     it "writes to error log correctly" do
-      cf = TestCloudFunction.new
-      cf.run
+      TestCloudFunction.exec
       File.read("/tmp/.gcf_error_log").should eq "error test 1\nerror test 2\n"
     end
 
