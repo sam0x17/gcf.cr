@@ -34,12 +34,27 @@ abstract class GCF::CloudFunction
     File.delete("/tmp/.gcf_redirect_url") if File.exists?("/tmp/.gcf_redirect_url")
     File.delete("/tmp/.gcf_redirect_mode") if File.exists?("/tmp/.gcf_redirect_mode")
     File.delete("/tmp/.gcf_status") if File.exists?("/tmp/.gcf_status")
+    File.delete("/tmp/.gcf_exception") if File.exists?("/tmp/.gcf_exception")
     @console = Console.new
     @text_output = File.new "/tmp/.gcf_text_output", "w"
     @file_output = File.new "/tmp/.gcf_file_output", "w"
     @redirect_url = File.new "/tmp/.gcf_redirect_url", "w"
     @redirect_mode = File.new "/tmp/.gcf_redirect_mode", "w"
     @status_code = File.new "/tmp/.gcf_status", "w"
+    @exception = File.new "/tmp/.gcf_exception", "w"
+  end
+
+  macro inherited
+    exec
+  end
+
+  def self.exec
+    cf = self.new
+    begin
+      cf.run
+    rescue ex
+      cf.raise_exception ex
+    end
   end
 
   def puts(msg)
@@ -107,6 +122,15 @@ abstract class GCF::CloudFunction
     File.delete @redirect_url.path
     @redirect_mode.close
     File.delete @redirect_mode.path
+  end
+
+  protected def raise_exception(ex : Exception)
+    ex.inspect_with_backtrace(@exception)
+    @exception.close
+    no_text_output
+    no_file_output
+    write_status 500
+    exit 1 unless GCF.test_mode
   end
 
   private def write_status(status : Int)

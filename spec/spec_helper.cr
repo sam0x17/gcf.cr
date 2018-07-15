@@ -1,5 +1,6 @@
 require "spec"
 require "../src/gcf"
+GCF.test_mode = true
 
 Spec.before_each do
   GCF.reset_config
