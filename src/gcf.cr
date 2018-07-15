@@ -11,6 +11,7 @@ module GCF
   CRYSTAL_STATIC_BUILD = "crystal build src/*.cr -o crystal_function --release --static --no-debug"
   CRYSTAL_BUILD = "crystal build src/*.cr -o crystal_function --release"
 
+  DEFAULT_CFLOG = ""
   DEFAULT_PROJECT_ID = ""
   DEFAULT_SOURCE_PATH = "."
   DEFAULT_FUNCTION_NAME = ""
@@ -27,6 +28,7 @@ module GCF
   DEFAULT_SILENT_MODE = false
   DEFAULT_TEST_MODE = false
 
+  meta_property cflog, DEFAULT_CFLOG
   meta_property project_id, DEFAULT_PROJECT_ID
   meta_property source_path, DEFAULT_SOURCE_PATH
   meta_property function_name, DEFAULT_FUNCTION_NAME
@@ -51,6 +53,7 @@ module GCF
   def self.trigger_mode=(val); @@trigger_mode = val; end
 
   def self.reset_config
+    @@cflog = DEFAULT_CFLOG
     @@project_id = DEFAULT_PROJECT_ID
     @@source_path = DEFAULT_SOURCE_PATH
     @@function_name = DEFAULT_FUNCTION_NAME

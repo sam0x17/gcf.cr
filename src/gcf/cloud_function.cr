@@ -1,30 +1,27 @@
 require "json"
 
+module GCF
+  protected def self.cf_puts(category : String, data)
+    if GCF.test_mode
+      GCF.cflog += "#{category}: #{data.to_s}\n"
+    else
+      puts "#{category}: #{data.to_s}"
+    end
+  end
+end
+
 abstract class GCF::CloudFunction
   private class Console
     def warn(msg)
-      @std_warn.puts "#{msg}\n"
+      GCF.cf_puts "warn", "#{msg}"
     end
 
     def error(msg)
-      @std_error.puts "#{msg}\n"
+      GCF.cf_puts "error", "#{msg}"
     end
 
     def log(msg)
-      @std_info.puts "#{msg}\n"
-    end
-
-    def initialize
-      File.delete("/tmp/.gcf_info_log") if File.exists?("/tmp/.gcf_info_log")
-      File.delete("/tmp/.gcf_warn_log") if File.exists?("/tmp/.gcf_warn_log")
-      File.delete("/tmp/.gcf_error_log") if File.exists?("/tmp/.gcf_error_log")
-      @std_info = File.new "/tmp/.gcf_info_log", "w"
-      @std_warn = File.new "/tmp/.gcf_warn_log", "w"
-      @std_error = File.new "/tmp/.gcf_error_log", "w"
-      [@std_info, @std_warn, @std_error].each { |f| f.flush_on_newline = true }
-      @std_info.flush_on_newline = true
-      @std_warn.flush_on_newline = true
-      @std_error.flush_on_newline = true
+      GCF.cf_puts "info", "#{msg}"
     end
   end
 
@@ -45,7 +42,7 @@ abstract class GCF::CloudFunction
   end
 
   macro inherited
-    exec
+    exec unless GCF.test_mode
   end
 
   def self.exec

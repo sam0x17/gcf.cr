@@ -2,6 +2,11 @@ require "./spec_helper"
 
 class TestCloudFunction < GCF::CloudFunction
   def run
+  end
+end
+
+class TestLogFunction < GCF::CloudFunction
+  def run
     console.log "info test 1"
     console.log "info test 2"
     console.warn "warn test 1"
@@ -20,19 +25,27 @@ end
 
 describe GCF do
   describe "integration" do
-    it "writes to info log correctly" do
-      TestCloudFunction.exec
-      File.read("/tmp/.gcf_info_log").should eq "info test 1\ninfo test 2\n"
+    it "writes to logs correctly" do
+      TestLogFunction.exec
+      GCF.cflog.should eq "info: info test 1\ninfo: info test 2\nwarn: warn test 1\nwarn: warn test 2\nerror: error test 1\nerror: error test 2\n"
     end
 
-    it "writes to warn log correctly" do
-      TestCloudFunction.exec
-      File.read("/tmp/.gcf_warn_log").should eq "warn test 1\nwarn test 2\n"
+    it "writes info log correctly" do
+      cf = TestCloudFunction.new
+      cf.console.log "whats up"
+      GCF.cflog.should eq "info: whats up\n"
     end
 
-    it "writes to error log correctly" do
-      TestCloudFunction.exec
-      File.read("/tmp/.gcf_error_log").should eq "error test 1\nerror test 2\n"
+    it "writes warn log correctly" do
+      cf = TestCloudFunction.new
+      cf.console.warn "whats up"
+      GCF.cflog.should eq "warn: whats up\n"
+    end
+
+    it "writes error log correctly" do
+      cf = TestCloudFunction.new
+      cf.console.error "whats up"
+      GCF.cflog.should eq "error: whats up\n"
     end
 
     it "sends status correctly for text" do
@@ -66,7 +79,6 @@ describe GCF do
       exception_text = File.read("/tmp/.gcf_exception")
       exception_text.includes?("OH MY GOD, THEY KILLED KENNY! (Exception)").should eq true
       exception_text.includes?("from spec/gcf_spec.cr").should eq true
-      File.read("/tmp/.gcf_info_log").should eq "doing some stuff\n"
       File.read("/tmp/.gcf_status").should eq "500"
     end
   end
@@ -116,4 +128,5 @@ describe GCF do
     GCF.http_trigger.should_not eq GCF::DEFAULT_HTTP_TRIGGER
     GCF.http_trigger.should eq "https://us-central1-test-project.cloudfunctions.net/#{File.basename GCF::PWD}"
   end
+
 end
