@@ -2,10 +2,12 @@ require "json"
 
 module GCF
   protected def self.cf_puts(category : String, data)
+    data = "#{data}"
+    data = data.gsub("\n", "\n#{category}: ")
     if GCF.test_mode
-      GCF.cflog += "#{category}: #{data.to_s}\n"
+      GCF.cflog += "#{category}: #{data}\n"
     else
-      puts "#{category}: #{data.to_s}"
+      puts "#{category}: #{data}"
     end
   end
 end
@@ -29,14 +31,12 @@ abstract class GCF::CloudFunction
     File.delete("/tmp/.gcf_text_output") if File.exists?("/tmp/.gcf_text_output")
     File.delete("/tmp/.gcf_file_output") if File.exists?("/tmp/.gcf_file_output")
     File.delete("/tmp/.gcf_redirect_url") if File.exists?("/tmp/.gcf_redirect_url")
-    File.delete("/tmp/.gcf_redirect_mode") if File.exists?("/tmp/.gcf_redirect_mode")
     File.delete("/tmp/.gcf_status") if File.exists?("/tmp/.gcf_status")
     File.delete("/tmp/.gcf_exception") if File.exists?("/tmp/.gcf_exception")
     @console = Console.new
     @text_output = File.new "/tmp/.gcf_text_output", "w"
     @file_output = File.new "/tmp/.gcf_file_output", "w"
     @redirect_url = File.new "/tmp/.gcf_redirect_url", "w"
-    @redirect_mode = File.new "/tmp/.gcf_redirect_mode", "w"
     @status_code = File.new "/tmp/.gcf_status", "w"
     @exception = File.new "/tmp/.gcf_exception", "w"
   end
@@ -73,6 +73,7 @@ abstract class GCF::CloudFunction
   def send(status : Int, text)
     no_file_output
     no_redirect_output
+    no_exception_output
     @text_output.puts text
     @text_output.close
     write_status status
@@ -82,6 +83,7 @@ abstract class GCF::CloudFunction
   def send_file(status : Int, path : String)
     no_text_output
     no_redirect_output
+    no_exception_output
     write_status status
     @file_output.puts path
     @file_output.close
@@ -95,10 +97,10 @@ abstract class GCF::CloudFunction
   def redirect(permanent : Bool, url : String)
     no_text_output
     no_file_output
+    no_exception_output
     @redirect_url.write url.to_s.to_slice
     @redirect_url.close
-    @redirect_mode.write (permanent ? 301 : 302).to_s.to_slice
-    @redirect_mode.close
+    write_status (permanent ? 301 : 302)
     exit 0 unless GCF.test_mode
   end
 
@@ -117,16 +119,20 @@ abstract class GCF::CloudFunction
   private def no_redirect_output
     @redirect_url.close
     File.delete @redirect_url.path
-    @redirect_mode.close
-    File.delete @redirect_mode.path
+  end
+
+  private def no_exception_output
+    @exception.close
+    File.delete @exception.path
   end
 
   protected def raise_exception(ex : Exception)
     ex.inspect_with_backtrace(@exception)
     @exception.close
-    no_text_output
-    no_file_output
     write_status 500
+    no_file_output
+    no_redirect_output
+    no_text_output
     exit 1 unless GCF.test_mode
   end
 

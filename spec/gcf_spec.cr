@@ -48,6 +48,11 @@ describe GCF do
       GCF.cflog.should eq "error: whats up\n"
     end
 
+    it "writes multiline things to log correctly" do
+      cf = TestCloudFunction.new
+      cf.console.info "hey\nmulti\nlines"
+    end
+
     it "sends status correctly for text" do
       cf = TestCloudFunction.new
       cf.send("test")
@@ -64,14 +69,14 @@ describe GCF do
       cf = TestCloudFunction.new
       cf.redirect("http://www.google.com")
       File.read("/tmp/.gcf_redirect_url").should eq "http://www.google.com"
-      File.read("/tmp/.gcf_redirect_mode").should eq "302"
+      File.read("/tmp/.gcf_status").should eq "302"
     end
 
     it "perma redirects correctly" do
       cf = TestCloudFunction.new
       cf.redirect(true, "http://www.google.com")
       File.read("/tmp/.gcf_redirect_url").should eq "http://www.google.com"
-      File.read("/tmp/.gcf_redirect_mode").should eq "301"
+      File.read("/tmp/.gcf_status").should eq "301"
     end
 
     it "handles exceptions correctly" do
@@ -128,5 +133,4 @@ describe GCF do
     GCF.http_trigger.should_not eq GCF::DEFAULT_HTTP_TRIGGER
     GCF.http_trigger.should eq "https://us-central1-test-project.cloudfunctions.net/#{File.basename GCF::PWD}"
   end
-
 end
