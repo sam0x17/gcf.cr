@@ -50,7 +50,8 @@ describe GCF do
 
     it "writes multiline things to log correctly" do
       cf = TestCloudFunction.new
-      cf.console.info "hey\nmulti\nlines"
+      cf.console.log "hey\nmulti\nlines"
+      GCF.cflog.should eq "info: hey\ninfo: multi\ninfo: lines\n"
     end
 
     it "sends status correctly for text" do
