@@ -54,3 +54,9 @@ Or using shorthand:
 ```bash
 gcf -d -s /home/sam/proj -l -n hello-world -m 2GB -p cool-project
 ```
+
+## TODO
+
+1. provide params to gcf template
+2. document API and provide examples
+3. more testing
