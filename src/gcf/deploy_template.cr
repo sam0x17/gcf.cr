@@ -18,7 +18,7 @@ module GCF::DeployTemplate
     var proc = child_process.spawn('./crystal_function');
 
     proc.stdout.on('data', function(data) {
-      var lines = data.toString().trim().split('\n');
+      var lines = data.toString().trim().split('\\n');
       lines.forEach(function(line) {
         if(line.startsWith("info: ")) {
           console.log(line.substring(6));
