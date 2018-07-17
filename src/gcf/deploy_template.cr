@@ -58,7 +58,7 @@ module GCF::DeployTemplate
       } else if(fs.existsSync('/tmp/.gcf_file_output')) {
         var path = fs.readFileSync('/tmp/.gcf_file_output').toString().trim();
         console.log('[gcf] sending file data from ', path);
-        res.status(status).sendFile(path);
+        res.status(status).sendFile(path, { root: __dirname });
       } else if(fs.existsSync('/tmp/.gcf_redirect_url')) {
         var url = fs.readFileSync('/tmp/.gcf_redirect_url').toString().trim();
         console.log('[gcf] sending ' + status + ' redirect to ' + url);
