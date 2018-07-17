@@ -146,27 +146,6 @@ class Example < GCF::CloudFunction
 end
 ```
 
-### puts
-
-If you call `puts` directly from within a cloud function's run method, this gets mapped to `console.log`.
-This does not apply to `puts` calls that are made indirectly (e.g. calling code outside of this class),
-so the contents of these `puts` calls will not be handled correctly and lead to undefined behavior.
-
-### send(status : Int, content)
-
-Sends the interpolated version of `content` as output to the browser with an HTTP status code
-of `status`, and stops execution of the cloud function. This is forwarded to `req.send` in ExpressJS.
-
-```crystal
-require "gcf"
-
-class Example < GCF::CloudFunction
-  def run(params : JSON::Any)
-    send 200, "<h1>YO</h1>"
-  end
-end
-```
-
 ### send(content)
 
 An alias for `send(200, content)`, where 200 is the HTTP OK/ready status code.
@@ -181,17 +160,17 @@ class Example < GCF::CloudFunction
 end
 ```
 
-### redirect(permanent : Bool, url : String)
+### send(status : Int, content)
 
-Redirects the browser to the specified `url`. If `permanent` is true, it will do a 301 redirect.
-If `permanent` is false, it will do a 302 redirect.
+Sends the interpolated version of `content` as output to the browser with an HTTP status code
+of `status`, and stops execution of the cloud function. This is forwarded to `req.send` in ExpressJS.
 
 ```crystal
 require "gcf"
 
 class Example < GCF::CloudFunction
   def run(params : JSON::Any)
-    redirect true, "https://google.com"
+    send 200, "<h1>YO</h1>"
   end
 end
 ```
@@ -211,17 +190,17 @@ class Example < GCF::CloudFunction
 end
 ```
 
-### send_file(status : Int, path : String)
+### redirect(permanent : Bool, url : String)
 
-Sends the file at the specified path to the browser with an HTTP status code of `status`
-(to write files from crystal in a cloud function, you need to write to something in `/tmp`).
+Redirects the browser to the specified `url`. If `permanent` is true, it will do a 301 redirect.
+If `permanent` is false, it will do a 302 redirect.
 
 ```crystal
 require "gcf"
 
 class Example < GCF::CloudFunction
   def run(params : JSON::Any)
-    send_file 200, "van_gogh.jpg"
+    redirect true, "https://google.com"
   end
 end
 ```
@@ -241,7 +220,28 @@ class Example < GCF::CloudFunction
 end
 ```
 
-### Note on exceptions
+### send_file(status : Int, path : String)
+
+Sends the file at the specified path to the browser with an HTTP status code of `status`
+(to write files from crystal in a cloud function, you need to write to something in `/tmp`).
+
+```crystal
+require "gcf"
+
+class Example < GCF::CloudFunction
+  def run(params : JSON::Any)
+    send_file 200, "van_gogh.jpg"
+  end
+end
+```
+
+### note on puts
+
+If you call `puts` directly from within a cloud function's run method, this gets mapped to `console.log`.
+This does not apply to `puts` calls that are made indirectly (e.g. calling code outside of this class),
+so the contents of these `puts` calls will not be handled correctly and lead to undefined behavior.
+
+### note on exceptions
 
 Right now exceptions work locally but not in a deployed function. We are working on this but
 please feel free to take a look at #1 and help out if you have any ideas. From what we can
