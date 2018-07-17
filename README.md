@@ -55,14 +55,7 @@ Or using shorthand:
 gcf -d -s /home/sam/proj -l -n hello-world -m 2GB -p cool-project
 ```
 
-## API
-
-A crystal-based API is provided for communicating with the Google Cloud Function host process so you can do
-things like log to the console redirect the browser, or send textual or file-based data to the browser.
-The API is a thin layer on top of the underlying ExpressJS API used by Google Cloud Functions, and uses
-a combination of inter-process communication and files to send data to/from the host process.
-
-### Getting Started
+## Getting Started
 
 All cloud functions should consist of a crystal app project (created via `crystal init app`)
 where the main project file (e.g `src/my_project.cr`) contains a class that inherits from
@@ -98,6 +91,15 @@ which makes up the body of your cloud function. The available API functions are 
 that methods like `send`, `send_file`, and `redirect` stop execution when they are run, meaning
 any code after these methods will not run unless it was already defined in an `at_exit` block. If
 you do not call one of these methods in your function, your function will run until it times out.
+
+Once you are done writing your function, you can deploy it using `gcf --deploy`.
+
+## Crystal API
+
+A crystal-based API is provided for communicating with the Google Cloud Function host process so you can do
+things like log to the console redirect the browser, or send textual or file-based data to the browser.
+The API is a thin layer on top of the underlying ExpressJS API used by Google Cloud Functions, and uses
+a combination of inter-process communication and files to send data to/from the host process.
 
 ### console.log(msg)
 
