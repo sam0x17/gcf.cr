@@ -54,15 +54,15 @@ abstract class GCF::CloudFunction
       at_exit { File.delete("/tmp/.gcf_params") }
     end
     cf = self.new
-    begin
-      cf.run params
-    rescue ex
-      sb = String::Builder.new
-      ex.inspect_with_backtrace(sb)
-      cf.console.log sb.to_s
-      cf.write_status 500
-      exit 1 unless GCF.test_mode
-    end
+    #begin
+    cf.run(params)
+    #rescue ex
+    #  sb = String::Builder.new
+    #  ex.inspect_with_backtrace(sb)
+    #  cf.console.log sb.to_s
+    #  cf.write_status 500
+    #  exit 1 unless GCF.test_mode
+    #end
   end
 
   def puts(msg)
