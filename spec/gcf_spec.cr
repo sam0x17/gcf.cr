@@ -115,22 +115,14 @@ describe GCF do
     GCF.deploy_ran.should eq false
   end
 
-  # it "deploys correctly if --deploy is specified" do
-  #   GCF.project_id = "test-project"
-  #   GCF.deploy_ran.should eq false
-  #   GCF.run_deploy = true
-  #   GCF.run
-  #   GCF.deploy_ran.should eq true
-  # end
-
-  # it "deploys http_trigger functions correctly" do
-  #   GCF.trigger_mode = "http"
-  #   GCF.http_trigger.should eq GCF::DEFAULT_HTTP_TRIGGER
-  #   GCF.project_id = "test-project"
-  #   GCF.run_deploy = true
-  #   GCF.run
-  #   GCF.deploy_ran.should eq true
-  #   GCF.http_trigger.should_not eq GCF::DEFAULT_HTTP_TRIGGER
-  #   GCF.http_trigger.should eq "https://us-central1-test-project.cloudfunctions.net/#{File.basename GCF::PWD}"
-  # end
+  it "deploys http_trigger functions correctly" do
+    GCF.trigger_mode = "http"
+    GCF.http_trigger.should eq GCF::DEFAULT_HTTP_TRIGGER
+    GCF.project_id = "test-project"
+    GCF.run_deploy = true
+    GCF.run
+    GCF.deploy_ran.should eq true
+    GCF.http_trigger.should_not eq GCF::DEFAULT_HTTP_TRIGGER
+    GCF.http_trigger.should eq "https://us-central1-test-project.cloudfunctions.net/#{File.basename GCF::PWD}"
+  end
 end
