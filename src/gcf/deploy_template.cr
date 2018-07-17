@@ -52,17 +52,14 @@ module GCF::DeployTemplate
         console.error("[gcf] an error occurred in your crystal function, but unfortunately we are not yet able to display the exception.")
         res.status(500).send();
        } else if(fs.existsSync('/tmp/.gcf_text_output')) {
-         console.log("text output mode");
         var output = fs.readFileSync('/tmp/.gcf_text_output').toString();
         console.log('[gcf] sending text output with status', status);
         res.status(status).send(output);
       } else if(fs.existsSync('/tmp/.gcf_file_output')) {
-        console.log("file output mode");
         var path = fs.readFileSync('/tmp/.gcf_file_output').toString().trim();
         console.log('[gcf] sending file data from ', path);
         res.status(status).sendFile(path);
       } else if(fs.existsSync('/tmp/.gcf_redirect_url')) {
-        console.log("redirect url mode");
         var url = fs.readFileSync('/tmp/.gcf_redirect_url').toString().trim();
         console.log('[gcf] sending ' + status + ' redirect to ' + url);
         res.redirect(status, url);
