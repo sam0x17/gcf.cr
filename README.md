@@ -235,13 +235,13 @@ class Example < GCF::CloudFunction
 end
 ```
 
-### note on puts
+### Note on puts
 
 If you call `puts` directly from within a cloud function's run method, this gets mapped to `console.log`.
 This does not apply to `puts` calls that are made indirectly (e.g. calling code outside of this class),
 so the contents of these `puts` calls will not be handled correctly and lead to undefined behavior.
 
-### note on exceptions
+### Note on exceptions
 
 Right now exceptions work locally but not in a deployed function. We are working on this but
 please feel free to take a look at #1 and help out if you have any ideas. From what we can
