@@ -8,7 +8,7 @@ module GCF
   POSSIBLE_MEMORY_CONFIGS = ["128MB", "256MB", "512MB", "1GB", "2GB"]
   POSSIBLE_TRIGGER_MODES = ["http", "topic", "bucket-create", "bucket-delete", "bucket-archive", "bucket-metadata-update"]
   PWD = `pwd`.strip
-  CRYSTAL_STATIC_BUILD = "crystal build src/*.cr -o crystal_function --release --static --no-debug"
+  CRYSTAL_STATIC_BUILD = "crystal build src/*.cr -o crystal_function --static --release"
   CRYSTAL_BUILD = "crystal build src/*.cr -o crystal_function --release"
 
   DEFAULT_CFLOG = ""
