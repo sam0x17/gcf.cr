@@ -18,8 +18,7 @@ the final response.
 5. set up docker [to not require sudo](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
 6. start the docker daemon (e.g. `sudo systemctl start docker`) if it isn't already running
 7. clone the repo `git clone git@github.com:sam0x17/gcf.cr.git`
-8. run `./build` (a binary named `gcf` will be created in the root directory). For a static binary, run `./build_static`.
-9. `sudo cp gcf /usr/bin` or add a directory containing the `gcf` binary to your `PATH` via your bash profile.
+8. run `./setup`. This will compile and install a `gcf` binary in `/usr/bin`.
 
 If you plan to use docker-based static compilation (default option), you don't need to install crystal on your system
 as long as you have a statically compiled `gcf` binary. You can find pre-compiled linux binaries in the releases page.
