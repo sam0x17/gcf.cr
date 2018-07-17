@@ -24,6 +24,8 @@ module GCF::DeployTemplate
   exports.init = function(req, res) {
     var proc = child_process.spawn('./crystal_function');
     var exception_lines = [];
+    var params = JSON.stringify(req.body);
+    fs.writeFileSync('/tmp/.gcf_params', params);
 
     proc.stdout.on('data', function(data) {
       var lines = data.toString().trim().split('\\n');

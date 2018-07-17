@@ -48,9 +48,14 @@ abstract class GCF::CloudFunction
   end
 
   def self.exec
+    params = JSON.parse "{}"
+    if File.exists?("/tmp/.gcf_params")
+      params = JSON.parse File.read("/tmp/.gcf_params")
+      at_exit { File.delete("/tmp/.gcf_params") }
+    end
     cf = self.new
     begin
-      cf.run
+      cf.run params
     rescue ex
       sb = String::Builder.new
       ex.inspect_with_backtrace(sb)
@@ -107,7 +112,7 @@ abstract class GCF::CloudFunction
     exit 0 unless GCF.test_mode
   end
 
-  abstract def run(params : JSON::Any = JSON.parse(""))
+  abstract def run(params : JSON::Any = JSON.parse("{}"))
 
   private def no_file_output
     @file_output.close
