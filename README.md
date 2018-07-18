@@ -42,7 +42,7 @@ dependencies:
 ```
 
 Create a class that inherits from `GCF::CloudFunction` and defines a `run` method that accepts
-an argument `params : JSON::Any`:
+an argument of type `JSON::Any`:
 
 ```crystal
 # src/example.cr
