@@ -28,8 +28,7 @@ to write tests.
 ## Getting Started
 
 All cloud functions should consist of a crystal app project (created via `crystal init app`)
-where the main project file (e.g `src/my_project.cr`) contains a class that inherits from
-`GCF::CloudFunction` and provides a `run` method, as shown below.
+where the main project file (e.g `src/my_project.cr`) meets the requirements outlined below.
 
 Add the following to your `shard.yml` file and run `shards install`:
 
@@ -42,7 +41,7 @@ dependencies:
     branch: master
 ```
 
-Create a class that inherits from `GCF::CloudFunction` and defines a `run` method that acceptes
+Create a class that inherits from `GCF::CloudFunction` and defines a `run` method that accepts
 an argument `params : JSON::Any`:
 
 ```crystal
