@@ -21,38 +21,9 @@ the final response.
 8. run `./setup`. This will compile and install a `gcf` binary in `/usr/bin`.
 
 If you plan to use docker-based static compilation (default option), you don't need to install crystal on your system
-as long as you have a statically compiled `gcf` binary. You can find pre-compiled linux binaries in the releases page.
-Otherwise you can use the `build_static` script included in the repo to build a static binary for gcf using docker.
-
-## Usage
-
-Note that GCF expects your crystal function to follow the directory structure imposed by `crystal init app`, in that
-all of your crystal code should reside in `project_name/src/`. During compilation, GCF uses the `src/*.cr` glob to
-compile all crystal files in the src directory.
-
-Note also that GCF will automatically consult `gcloud` to discover the current GCP project id if one isn't specified.
-
-Below you can find some basic usage examples fo rcommon use cases. For full usage information, please see the output
-of `gcf --help`.
-
-Compile the current directory using the docker image and deploy as a function named after the current directory (default):
-
-```bash
-gcf --deploy
-```
-
-Specifying the source directory, static compilation using the local crystal installation, the function name, the
-memory capacity of the deployed function, and the google project ID respectively.
-
-```bash
-gcf --deploy --source /home/sam/proj --local --name hello-world --memory 2GB --project cool-project
-```
-
-Or using shorthand:
-
-```bash
-gcf -d -s /home/sam/proj -l -n hello-world -m 2GB -p cool-project
-```
+as long as you have a statically compiled `gcf` binary. You can use the `build_static` script included in the repo
+to build a static binary for gcf using docker. That said, having crystal locally installed will make it easier
+to write tests.
 
 ## Getting Started
 
@@ -248,6 +219,36 @@ tell, all execution stops the second an exception is thrown, even from within a 
 block, when a function is executing on GCP. For now we are logging a generic message
 stating that an error occurred, however we are unable to retrieve the error stacktrace
 or name (locally we are able to do this).
+
+## Deploying
+
+Note that GCF expects your crystal function to follow the directory structure imposed by `crystal init app`, in that
+all of your crystal code should reside in `project_name/src/`. During compilation, GCF uses the `src/*.cr` glob to
+compile all crystal files in the src directory.
+
+Note also that GCF will automatically consult `gcloud` to discover the current GCP project id if one isn't specified.
+
+Below you can find some basic usage examples fo rcommon use cases. For full usage information, please see the output
+of `gcf --help`.
+
+Compile the current directory using the docker image and deploy as a function named after the current directory (default):
+
+```bash
+gcf --deploy
+```
+
+Specifying the source directory, static compilation using the local crystal installation, the function name, the
+memory capacity of the deployed function, and the google project ID respectively.
+
+```bash
+gcf --deploy --source /home/sam/proj --local --name hello-world --memory 2GB --project cool-project
+```
+
+Or using shorthand:
+
+```bash
+gcf -d -s /home/sam/proj -l -n hello-world -m 2GB -p cool-project
+```
 
 ## TODO
 
