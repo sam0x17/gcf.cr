@@ -70,6 +70,30 @@ things like log to the console redirect the browser, or send textual or file-bas
 The API is a thin layer on top of the underlying ExpressJS API used by Google Cloud Functions, and uses
 a combination of inter-process communication and files to send data to/from the host process.
 
+The most basic requirement, as outlined in the getting started section, is that you create a class
+that inherits from `GCF::CloudFunction` and provide a definition for the `run(params : JSON::Any)`
+method.
+
+## params
+
+The run method of your crystal function will provide the HTTP params object in the form of a
+`JSON::Any` object named `params`. You can access values in the params object as you would
+a hash:
+
+```crystal
+require "gcf"
+
+class Example < GCF::CloudFunction
+  def run(params : JSON::Any)
+    console.log params
+    send "color: #{params["color"]?}"
+  end
+end
+```
+
+If you send the http parameter `color` with the value of `red`, `{"color":"red"}` will be printed
+to the console/log, and the function will return `"color: red"` with a 200 status code.
+
 ### console.log(msg)
 
 Logs whatever you pass it to the GCF console with `info` priority. Equivalent to using `console.log`
