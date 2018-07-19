@@ -91,8 +91,9 @@ class Example < GCF::CloudFunction
 end
 ```
 
-If you send the http parameter `color` with the value of `red`, `{"color":"red"}` will be printed
-to the console/log, and the function will return `"color: red"` with a 200 status code.
+If you send the http parameter `color` with the value of `red`, the function will return `"color: red"`
+with a 200 status code and you will get the following console output:
+![console image](https://i.imgur.com/VF9tMJk.png)
 
 ### console.log(msg)
 
