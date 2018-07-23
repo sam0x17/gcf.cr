@@ -81,7 +81,7 @@ module GCF
   def self.parse_options
     OptionParser.parse! do |parser|
       parser.banner = "usage: #{APPBIN} [arguments]"
-      parser.on("-h", "--help", "show this help") { puts_safe ""; puts_safe parser; puts_safe "" }
+      parser.on("-h", "--help", "show this help") { puts_safe ""; puts_safe parser; puts_safe ""; exit }
       parser.on("-d", "--deploy", "required to indicate that you intend to deploy") { @@run_deploy = true }
       parser.on("-l", "--local", "attempt to statically compile crystal function using local system crystal") { @@use_local_crystal = true }
       parser.on("-S", "--silent", "does not print anything during deploy process") { @@silent_mode = true }
