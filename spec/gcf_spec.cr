@@ -120,6 +120,7 @@ describe GCF do
     GCF.http_trigger.should eq GCF::DEFAULT_HTTP_TRIGGER
     GCF.project_id = "test-project"
     GCF.run_deploy = true
+    GCF.production_mode?.should eq false
     GCF.run
     GCF.deploy_ran.should eq true
     GCF.http_trigger.should_not eq GCF::DEFAULT_HTTP_TRIGGER

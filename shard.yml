@@ -8,6 +8,10 @@ targets:
   gcf:
     main: src/gcf.cr
 
+dependencies:
+  kemal:
+    github: kemalcr/kemal
+
 crystal: 0.25.1
 
 license: MIT

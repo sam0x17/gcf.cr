@@ -1,18 +1,25 @@
 require "json"
 
+{% unless flag?(:production) %}
+require "./test_server/test_server"
+{% end %}
+
 module GCF
   protected def self.cf_puts(category : String, data)
     data = "#{data}"
     data = data.gsub("\n", "\ngcf-#{category}: ")
     if GCF.test_mode
       GCF.cflog += "gcf-#{category}: #{data}\n"
-    else
+    elsif GCF.production_mode?
       puts "gcf-#{category}: #{data}"
+    else
+      puts data
     end
   end
 end
 
 abstract class GCF::CloudFunction
+
   private class Console
     def warn(msg)
       GCF.cf_puts "warn", "#{msg}"
@@ -48,21 +55,27 @@ abstract class GCF::CloudFunction
   end
 
   def self.exec
-    params = JSON.parse "{}"
-    if File.exists?("/tmp/.gcf_params")
-      params = JSON.parse File.read("/tmp/.gcf_params")
-      at_exit { File.delete("/tmp/.gcf_params") }
+    if GCF.production_mode? || GCF.test_mode
+      params = JSON.parse "{}"
+      if File.exists?("/tmp/.gcf_params")
+        params = JSON.parse File.read("/tmp/.gcf_params")
+        at_exit { File.delete("/tmp/.gcf_params") }
+      end
+      cf = self.new
+      #begin
+      cf.run params
+      #rescue ex
+      #  sb = String::Builder.new
+      #  ex.inspect_with_backtrace(sb)
+      #  cf.console.log sb.to_s
+      #  cf.write_status 500
+      #  exit 1 unless GCF.test_mode
+      #end
+    else
+      {% unless flag?(:production) %}
+      TestServer.run self
+      {% end %}
     end
-    cf = self.new
-    #begin
-    cf.run(params)
-    #rescue ex
-    #  sb = String::Builder.new
-    #  ex.inspect_with_backtrace(sb)
-    #  cf.console.log sb.to_s
-    #  cf.write_status 500
-    #  exit 1 unless GCF.test_mode
-    #end
   end
 
   def puts(msg)
@@ -87,7 +100,7 @@ abstract class GCF::CloudFunction
     @text_output.puts text
     @text_output.close
     write_status status
-    exit 0 unless GCF.test_mode
+    exit 0 unless GCF.test_mode || !GCF.production_mode?
   end
 
   def send_file(status : Int, path : String)
@@ -96,7 +109,7 @@ abstract class GCF::CloudFunction
     write_status status
     @file_output.puts path
     @file_output.close
-    exit 0 unless GCF.test_mode
+    exit 0 unless GCF.test_mode || !GCF.production_mode?
   end
 
   def redirect(url : String)
@@ -109,7 +122,7 @@ abstract class GCF::CloudFunction
     @redirect_url.write url.to_s.to_slice
     @redirect_url.close
     write_status (permanent ? 301 : 302)
-    exit 0 unless GCF.test_mode
+    exit 0 unless GCF.test_mode || !GCF.production_mode?
   end
 
   abstract def run(params : JSON::Any = JSON.parse("{}"))

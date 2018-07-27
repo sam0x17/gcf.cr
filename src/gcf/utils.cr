@@ -33,6 +33,10 @@ module GCF
     polite_raise! "#{bin} must be installed to use #{APPNAME}"
   end
 
+  def self.production_mode?
+    !!ENV["X_GOOGLE_CODE_LOCATION"]?
+  end
+
   def self.docker_available?
     return true if test_mode
     output = `docker info`
