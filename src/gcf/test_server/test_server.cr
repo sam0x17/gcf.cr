@@ -18,6 +18,7 @@ module GCF::TestServer
         raise "page did not send or redirect anything"
       end
     end
+    Kemal.config.port = 8080
     Kemal.run
   end
 end
