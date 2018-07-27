@@ -11,7 +11,7 @@ module GCF::TestServer
       if File.exists?("/tmp/.gcf_text_output")
         File.read("/tmp/.gcf_text_output")
       elsif File.exists?("/tmp/.gcf_file_output")
-        send_file env, "/tmp/.gcf_file_output"
+        send_file env, File.read("/tmp/.gcf_file_output")
       elsif File.exists?("/tmp/.gcf_redirect_url")
         env.redirect File.read("/tmp/.gcf_redirect_url"), File.read("/tmp/.gcf_status").to_i
       else
