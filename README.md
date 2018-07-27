@@ -262,10 +262,12 @@ for the function. Note that while send_file/send/redirect methods normally stop 
 once they execute, this is not the case in the test server, though this is something we are trying
 to find a workaround for.
 
+GET and POST params that are sent to the test server are automatically loaded into the params of your
+cloud function when it is invoked.
+
 ```
 gcf_test$ crystal run src/gcf_test.cr
 [development] Kemal is ready to lead at http://0.0.0.0:8080
-{}
 2018-07-27 04:04:06 -04:00 200 GET / 375.0µs
 {"color" => "red"}
 2018-07-27 04:04:13 -04:00 200 GET /?color=red 1.41ms
