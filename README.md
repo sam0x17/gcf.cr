@@ -244,6 +244,33 @@ block, when a function is executing on GCP. For now we are logging a generic mes
 stating that an error occurred, however we are unable to retrieve the error stacktrace
 or name (locally we are able to do this).
 
+## Tests / Specs
+
+You can test your cloud function with specs the same way you would any conventional crystal-based
+app or library. See `gcf_spec.cr` for examples of how to test for particular functions outputs,
+redirects, etc. Also make sure to set `GCF.test_mode = true` in your `spec_helper.cr` file before any specs
+are loaded or the development server will attempt to run before your specs can run.
+
+## Development Mode / Test Server
+
+A built-in test server is provided (based on Kemal) that allows you to simulate
+requests to your (HTTP-triggered) cloud functions on your local machine. Simply compile and
+run your cloud function e.g. `crystal run src/*.cr` and Kemal will automatically start
+the test server on port 8080. You can access it in a web browser by going to `http://localhost:8080/`,
+which will trigger your cloud function and load the result as if you just visited the HTTP trigger URL
+for the function. Note that while send_file/send/redirect methods normally stop execution of your function
+once they execute, this is not the case in the test server, though this is something we are trying
+to find a workaround for.
+
+```
+gcf_test$ crystal run src/gcf_test.cr
+[development] Kemal is ready to lead at http://0.0.0.0:8080
+{}
+2018-07-27 04:04:06 -04:00 200 GET / 375.0µs
+{"color" => "red"}
+2018-07-27 04:04:13 -04:00 200 GET /?color=red 1.41ms
+```
+
 ## Deploying
 
 Note that GCF expects your crystal function to follow the directory structure imposed by `crystal init app`, in that
