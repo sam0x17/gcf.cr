@@ -251,6 +251,16 @@ app or library. See `gcf_spec.cr` for examples of how to test for particular fun
 redirects, etc. Also make sure to set `GCF.test_mode = true` in your `spec_helper.cr` file before any specs
 are loaded or the development server will attempt to run before your specs can run.
 
+Example `spec_helper.cr` file:
+
+```crystal
+# spec/spec_helper.cr
+GCF.test_mode = true
+
+require "spec"
+require "../src/my_project.cr"
+```
+
 ## Development Mode / Test Server
 
 A built-in test server is provided (based on Kemal) that allows you to simulate
