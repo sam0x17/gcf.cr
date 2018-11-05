@@ -10,6 +10,7 @@ module GCF
   PWD = `pwd`.strip
   CRYSTAL_STATIC_BUILD = "crystal build src/*.cr -o crystal_function --static --release --define production"
   CRYSTAL_BUILD = "crystal build src/*.cr -o crystal_function --release --define production"
+  VALID_REGIONS = ["us-central1", "us-east1, asia-northeast1, europe-west1"]
 
   DEFAULT_CFLOG = ""
   DEFAULT_PROJECT_ID = ""
@@ -88,7 +89,7 @@ module GCF
       parser.on("-p PROJECT", "--project PROJECT", "Google project ID, defaults to current gcloud setting") { |v| @@project_id = v }
       parser.on("-s PATH", "--source PATH", "path to source code to be deployed, defaults to '.'") { |v| @@source_path = v }
       parser.on("-n NAME", "--name NAME", "cloud function name, defaults to name of directory or repo") { |v| @@function_name = v }
-      parser.on("-r REGION", "--region REGION", "region for cloud function deployment, only us-central1 is valid") { |v| @@region = v }
+      parser.on("-r REGION", "--region REGION", "region for cloud function deployment, must be one of #{VALID_REGIONS}") { |v| @@region = v }
       parser.on("-m MEMORY", "--memory MEMORY", "ram/memory allocated for cloud function, valid: 128MB | 256MB | 512MB | 1GB | 2GB") { |v| @@function_memory = v }
       parser.on("-t TRIGGER", "--trigger TRIGGER", "trigger mode for the cloud function, valid: http, topic, bucket-create, bucket-delete, bucket-archive, bucket-metadata-update") do |v|
         @@trigger_mode = v
@@ -185,8 +186,8 @@ module GCF
     end
 
     # check for valid region
-    if region != "us-central1"
-      puts_safe "error: the only valid cloud function region at the moment is \"us-central1\". You specified \"#{region}\""
+    if !VALID_REGIONS.includes? region
+      puts_safe "error: the only valid cloud function region at the moment are #{VALID_REGIONS}. You specified \"#{region}\""
       exit 1
     end
 
