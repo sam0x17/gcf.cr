@@ -3,7 +3,7 @@
 [![CircleCI](https://circleci.com/gh/sam0x17/gcf.cr.svg?style=svg)](https://circleci.com/gh/sam0x17/gcf.cr)
 
 GCF provides managed execution of crystal language code within Google Cloud Functions.
-GCF compiles your crystal code statically using the [durosoft/crystal-alpine](https://hub.docker.com/r/durosoft/crystal-alpine/)
+GCF compiles your crystal code statically using the [crystallang/crystal](https://hub.docker.com/r/crystallang/crystal)
 docker image or optionally using your local crystal installation (if it is capable of static compilation) via the `--local` option.
 It then bundles your compiled crystal code in a thin node.js wrapper function and deploys it to GCP using
 the options you specify. An API is also provided for writing to the console, throwing errors, and returning

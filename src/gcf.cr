@@ -80,7 +80,7 @@ module GCF
   end
 
   def self.parse_options
-    OptionParser.parse! do |parser|
+    OptionParser.parse do |parser|
       parser.banner = "usage: #{APPBIN} [arguments]"
       parser.on("-h", "--help", "show this help") { puts_safe ""; puts_safe parser; puts_safe ""; exit }
       parser.on("-d", "--deploy", "required to indicate that you intend to deploy") { @@run_deploy = true }
@@ -136,8 +136,8 @@ module GCF
       puts_safe "compiling static binary using local crystal installation: #{`crystal --version`.strip}..."
       comp_result = `#{CRYSTAL_STATIC_BUILD}`
     else
-      puts_safe "compiling static binary using the durosoft/crystal-alpine docker image..."
-      comp_result = `docker pull durosoft/crystal-alpine && docker run --rm -it -v $PWD:/app -w /app durosoft/crystal-alpine #{CRYSTAL_STATIC_BUILD}`
+      puts_safe "compiling static binary using the crystallang/crystal docker image..."
+      comp_result = `docker run --rm -it -v $PWD:/app -w /app crystallang/crystal #{CRYSTAL_STATIC_BUILD}`
     end
     polite_raise! comp_result if comp_result.includes? "error"
     polite_raise! "project did not compile successfully" unless File.exists? "crystal_function"
