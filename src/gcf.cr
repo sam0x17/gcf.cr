@@ -80,7 +80,7 @@ module GCF
   end
 
   def self.parse_options
-    OptionParser.parse! do |parser|
+    OptionParser.parse do |parser|
       parser.banner = "usage: #{APPBIN} [arguments]"
       parser.on("-h", "--help", "show this help") { puts_safe ""; puts_safe parser; puts_safe ""; exit }
       parser.on("-d", "--deploy", "required to indicate that you intend to deploy") { @@run_deploy = true }
